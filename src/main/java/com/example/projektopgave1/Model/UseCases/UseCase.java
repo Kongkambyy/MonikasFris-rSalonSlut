@@ -20,7 +20,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class UseCase {
     private final AftaleDatabaseHandler aftaleDatabaseHandler;
@@ -42,33 +41,26 @@ public class UseCase {
 
     public Aftale createAppointment(int kundeId, int medarbejderId, int behandlingId, LocalDateTime startDateTime)
             throws DatabaseConnectionException, HairdresserBusyException, TimeSlotUnavailableException, BookingNotPossibleException {
-
         if (startDateTime.toLocalTime().isBefore(OPENING_TIME) || startDateTime.toLocalTime().isAfter(CLOSING_TIME)) {
             throw new TimeSlotUnavailableException("Tid kan ikke bookes uden for åbningstiden (9:00-18:00)",
                     startDateTime, startDateTime);
         }
-
         if (startDateTime.isBefore(LocalDateTime.now())) {
             throw new BookingNotPossibleException("Kan ikke oprette booking i fortiden");
         }
-
         Behandling behandling = behandlingDatabaseHandler.getById(behandlingId);
         if (behandling == null) {
             throw new BookingNotPossibleException("Behandlingen eksisterer ikke");
         }
-
         LocalDateTime endDateTime = startDateTime.plusMinutes(behandling.getVarighed());
-
         if (endDateTime.toLocalTime().isAfter(CLOSING_TIME)) {
             throw new TimeSlotUnavailableException("Behandlingen vil slutte efter lukketid",
                     startDateTime, endDateTime);
         }
-
         if (!isEmployeeAvailable(medarbejderId, startDateTime, endDateTime)) {
             throw new HairdresserBusyException("Frisøren er optaget i det valgte tidsrum",
                     medarbejderId, startDateTime.toString());
         }
-
         Aftale aftale = new Aftale();
         aftale.setKundeID(kundeId);
         aftale.setMedarbejderID(medarbejderId);
@@ -77,7 +69,6 @@ public class UseCase {
         aftale.setSluttidspunkt(endDateTime);
         aftale.setStatus("Booket");
         aftale.setOprettelsesdato(LocalDateTime.now());
-
         return aftaleDatabaseHandler.create(aftale);
     }
 
@@ -95,10 +86,13 @@ public class UseCase {
 
     public List<Aftale> getAppointmentsByDateAndEmployee(LocalDate date, int medarbejderId) throws DatabaseConnectionException {
         List<Aftale> employeeAppointments = aftaleDatabaseHandler.findByEmployee(medarbejderId);
-
-        return employeeAppointments.stream()
-                .filter(aftale -> aftale.getStarttidspunkt().toLocalDate().equals(date))
-                .collect(Collectors.toList());
+        List<Aftale> result = new ArrayList<>();
+        for (Aftale appointment : employeeAppointments) {
+            if (appointment.getStarttidspunkt().toLocalDate().equals(date)) {
+                result.add(appointment);
+            }
+        }
+        return result;
     }
 
     public List<Aftale> getCustomerAppointments(int kundeId) throws DatabaseConnectionException {
@@ -107,132 +101,110 @@ public class UseCase {
 
     public boolean cancelAppointment(int aftaleId) throws DatabaseConnectionException {
         Aftale aftale = aftaleDatabaseHandler.getById(aftaleId);
-
         if (aftale == null) {
             return false;
         }
-
         aftale.setStatus("Aflyst");
-
         Aftale updatedAftale = aftaleDatabaseHandler.update(aftale);
         return updatedAftale != null;
     }
 
     public Aftale moveAppointment(int aftaleId, LocalDateTime newStartDateTime)
             throws DatabaseConnectionException, HairdresserBusyException, TimeSlotUnavailableException, BookingNotPossibleException {
-
         Aftale aftale = aftaleDatabaseHandler.getById(aftaleId);
-
         if (aftale == null) {
             throw new BookingNotPossibleException("Aftalen eksisterer ikke");
         }
-
         if (newStartDateTime.toLocalTime().isBefore(OPENING_TIME) || newStartDateTime.toLocalTime().isAfter(CLOSING_TIME)) {
             throw new TimeSlotUnavailableException("Tid kan ikke bookes uden for åbningstiden (9:00-18:00)",
                     newStartDateTime, newStartDateTime);
         }
-
         if (newStartDateTime.isBefore(LocalDateTime.now())) {
             throw new BookingNotPossibleException("Kan ikke flytte booking til en tid i fortiden");
         }
-
         Behandling behandling = behandlingDatabaseHandler.getById(aftale.getBehandlingID());
-
         LocalDateTime newEndDateTime = newStartDateTime.plusMinutes(behandling.getVarighed());
-
         if (newEndDateTime.toLocalTime().isAfter(CLOSING_TIME)) {
             throw new TimeSlotUnavailableException("Behandlingen vil slutte efter lukketid",
                     newStartDateTime, newEndDateTime);
         }
-
         if (!isEmployeeAvailableExcluding(aftale.getMedarbejderID(), newStartDateTime, newEndDateTime, aftaleId)) {
             throw new HairdresserBusyException("Frisøren er optaget i det valgte tidsrum",
                     aftale.getMedarbejderID(), newStartDateTime.toString());
         }
-
         aftale.setStarttidspunkt(newStartDateTime);
         aftale.setSluttidspunkt(newEndDateTime);
-
         return aftaleDatabaseHandler.update(aftale);
     }
 
     public boolean isEmployeeAvailable(int medarbejderId, LocalDateTime startDateTime, LocalDateTime endDateTime)
             throws DatabaseConnectionException {
-
         List<Aftale> employeeAppointments = aftaleDatabaseHandler.findByEmployee(medarbejderId);
         return isEmployeeAvailable(medarbejderId, startDateTime, endDateTime, employeeAppointments);
     }
 
     public boolean isEmployeeAvailable(int medarbejderId, LocalDateTime startDateTime, LocalDateTime endDateTime,
                                        List<Aftale> employeeAppointments) {
-
         for (Aftale appointment : employeeAppointments) {
-            if (appointment.getStatus().equals("Aflyst")) {
+            if ("Aflyst".equals(appointment.getStatus())) {
                 continue;
             }
-
             if (!(endDateTime.isBefore(appointment.getStarttidspunkt()) ||
                     startDateTime.isAfter(appointment.getSluttidspunkt()))) {
                 return false;
             }
         }
-
         return true;
     }
 
     public boolean isEmployeeAvailableExcluding(int medarbejderId, LocalDateTime startDateTime, LocalDateTime endDateTime,
                                                 int excludeAftaleId) throws DatabaseConnectionException {
-
         List<Aftale> employeeAppointments = aftaleDatabaseHandler.findByEmployee(medarbejderId);
-
-        List<Aftale> filteredAppointments = employeeAppointments.stream()
-                .filter(aftale -> aftale.getAftaleID() != excludeAftaleId)
-                .collect(Collectors.toList());
-
+        List<Aftale> filteredAppointments = new ArrayList<>();
+        for (Aftale appointment : employeeAppointments) {
+            if (appointment.getAftaleID() != excludeAftaleId) {
+                filteredAppointments.add(appointment);
+            }
+        }
         return isEmployeeAvailable(medarbejderId, startDateTime, endDateTime, filteredAppointments);
     }
 
     public List<LocalTime> getAvailableTimeSlots(LocalDate date, int medarbejderId, int behandlingId)
             throws DatabaseConnectionException {
-
         Behandling behandling = behandlingDatabaseHandler.getById(behandlingId);
         if (behandling == null) {
             return new ArrayList<>();
         }
-
         int treatmentDuration = behandling.getVarighed();
-
         List<Aftale> employeeAppointments = aftaleDatabaseHandler.findByEmployee(medarbejderId);
-        List<Aftale> dateAppointments = employeeAppointments.stream()
-                .filter(aftale -> aftale.getStarttidspunkt().toLocalDate().equals(date))
-                .collect(Collectors.toList());
-
+        List<Aftale> dateAppointments = new ArrayList<>();
+        for (Aftale appointment : employeeAppointments) {
+            if (appointment.getStarttidspunkt().toLocalDate().equals(date)) {
+                dateAppointments.add(appointment);
+            }
+        }
         List<LocalTime> allPossibleSlots = new ArrayList<>();
         LocalTime currentTime = OPENING_TIME;
-
         while (currentTime.plusMinutes(treatmentDuration).isBefore(CLOSING_TIME) ||
                 currentTime.plusMinutes(treatmentDuration).equals(CLOSING_TIME)) {
             allPossibleSlots.add(currentTime);
             currentTime = currentTime.plusMinutes(30);
         }
-
-        return allPossibleSlots.stream()
-                .filter(startTime -> {
-                    LocalDateTime startDateTime = LocalDateTime.of(date, startTime);
-                    LocalDateTime endDateTime = startDateTime.plusMinutes(treatmentDuration);
-
-                    return isEmployeeAvailable(medarbejderId, startDateTime, endDateTime, dateAppointments);
-                })
-                .collect(Collectors.toList());
+        List<LocalTime> availableSlots = new ArrayList<>();
+        for (LocalTime startTime : allPossibleSlots) {
+            LocalDateTime startDateTime = LocalDateTime.of(date, startTime);
+            LocalDateTime endDateTime = startDateTime.plusMinutes(treatmentDuration);
+            if (isEmployeeAvailable(medarbejderId, startDateTime, endDateTime, dateAppointments)) {
+                availableSlots.add(startTime);
+            }
+        }
+        return availableSlots;
     }
 
     public Kunde createCustomer(String navn, String nummer, String mail, String adresse)
             throws InvalidInputException, DatabaseConnectionException {
-
         validateCustomerData(navn, nummer, mail);
-
         Kunde kunde = new Kunde(0, navn, nummer, mail, adresse);
-
         return kundeDatabaseHandler.create(kunde);
     }
 
@@ -246,11 +218,8 @@ public class UseCase {
 
     public boolean updateCustomer(int kundeId, String navn, String nummer, String mail, String adresse)
             throws InvalidInputException, DatabaseConnectionException {
-
         validateCustomerData(navn, nummer, mail);
-
         Kunde kunde = new Kunde(kundeId, navn, nummer, mail, adresse);
-
         return kundeDatabaseHandler.update(kunde);
     }
 
@@ -260,47 +229,34 @@ public class UseCase {
 
     public List<Kunde> searchCustomersByName(String searchTerm) throws DatabaseConnectionException {
         List<Kunde> allCustomers = kundeDatabaseHandler.readAll();
-
-        return allCustomers.stream()
-                .filter(kunde -> kunde.getNavn().toLowerCase().contains(searchTerm.toLowerCase()))
-                .collect(Collectors.toList());
+        List<Kunde> result = new ArrayList<>();
+        for (Kunde kunde : allCustomers) {
+            if (kunde.getNavn().toLowerCase().contains(searchTerm.toLowerCase())) {
+                result.add(kunde);
+            }
+        }
+        return result;
     }
 
     private void validateCustomerData(String navn, String nummer, String mail) throws InvalidInputException {
         if (navn == null || navn.trim().isEmpty()) {
             throw new InvalidInputException("Navn må ikke være tomt", "Navn");
         }
-
         if (nummer != null && !nummer.trim().isEmpty() && !PHONE_PATTERN.matcher(nummer).matches()) {
-            throw new InvalidInputException(
-                    "Ugyldigt telefonnummer format",
-                    "Nummer",
-                    nummer,
-                    "8 cifre, eventuelt adskilt af mellemrum (f.eks. 12 34 56 78)"
-            );
+            throw new InvalidInputException("Ugyldigt telefonnummer format", "Nummer", nummer, "8 cifre, eventuelt adskilt af mellemrum (f.eks. 12 34 56 78)");
         }
-
         if (mail != null && !mail.trim().isEmpty() && !EMAIL_PATTERN.matcher(mail).matches()) {
-            throw new InvalidInputException(
-                    "Ugyldig email format",
-                    "Mail",
-                    mail,
-                    "example@domain.com"
-            );
+            throw new InvalidInputException("Ugyldig email format", "Mail", mail, "example@domain.com");
         }
     }
 
     public Behandling createTreatment(String navn, int varighed, int pris)
             throws InvalidInputException, DatabaseConnectionException {
-
         validateTreatmentData(navn, varighed, pris);
-
-        // Use default constructor and set values instead of the 3-argument constructor
         Behandling behandling = new Behandling();
         behandling.setBehandling(navn);
         behandling.setVarighed(varighed);
         behandling.setPris(pris);
-
         return behandlingDatabaseHandler.create(behandling);
     }
 
@@ -314,16 +270,12 @@ public class UseCase {
 
     public boolean updateTreatment(int behandlingId, String navn, int varighed, int pris)
             throws InvalidInputException, DatabaseConnectionException {
-
         validateTreatmentData(navn, varighed, pris);
-
-        // Use default constructor and set values
         Behandling behandling = new Behandling();
         behandling.setBehandlingID(behandlingId);
         behandling.setBehandling(navn);
         behandling.setVarighed(varighed);
         behandling.setPris(pris);
-
         return behandlingDatabaseHandler.update(behandling);
     }
 
@@ -333,29 +285,33 @@ public class UseCase {
 
     public List<Behandling> getTreatmentsByDurationRange(int minDuration, int maxDuration) throws DatabaseConnectionException {
         List<Behandling> allTreatments = behandlingDatabaseHandler.getAll();
-
-        return allTreatments.stream()
-                .filter(behandling -> behandling.getVarighed() >= minDuration && behandling.getVarighed() <= maxDuration)
-                .collect(Collectors.toList());
+        List<Behandling> result = new ArrayList<>();
+        for (Behandling behandling : allTreatments) {
+            if (behandling.getVarighed() >= minDuration && behandling.getVarighed() <= maxDuration) {
+                result.add(behandling);
+            }
+        }
+        return result;
     }
 
     public List<Behandling> getTreatmentsByPriceRange(int minPrice, int maxPrice) throws DatabaseConnectionException {
         List<Behandling> allTreatments = behandlingDatabaseHandler.getAll();
-
-        return allTreatments.stream()
-                .filter(behandling -> behandling.getPris() >= minPrice && behandling.getPris() <= maxPrice)
-                .collect(Collectors.toList());
+        List<Behandling> result = new ArrayList<>();
+        for (Behandling behandling : allTreatments) {
+            if (behandling.getPris() >= minPrice && behandling.getPris() <= maxPrice) {
+                result.add(behandling);
+            }
+        }
+        return result;
     }
 
     private void validateTreatmentData(String navn, int varighed, int pris) throws InvalidInputException {
         if (navn == null || navn.trim().isEmpty()) {
             throw new InvalidInputException("Behandlingsnavn må ikke være tomt", "Behandling");
         }
-
         if (varighed <= 0) {
             throw new InvalidInputException("Varighed skal være større end 0", "Varighed", String.valueOf(varighed));
         }
-
         if (pris < 0) {
             throw new InvalidInputException("Pris kan ikke være negativ", "Pris", String.valueOf(pris));
         }
@@ -363,15 +319,11 @@ public class UseCase {
 
     public Medarbejder createEmployee(String navn, String brugernavn, String adgangskode, String nummer, String mail)
             throws InvalidInputException, DatabaseConnectionException {
-
         validateEmployeeData(navn, brugernavn, adgangskode, nummer, mail);
-
         if (!isUsernameAvailable(brugernavn)) {
             throw new InvalidInputException("Brugernavn er allerede i brug", "Brugernavn", brugernavn);
         }
-
         Medarbejder medarbejder = new Medarbejder(navn, brugernavn, adgangskode, nummer, mail);
-
         return medarbejderDatabaseHandler.create(medarbejder);
     }
 
@@ -386,19 +338,15 @@ public class UseCase {
     public boolean updateEmployee(int medarbejderId, String navn, String brugernavn, String adgangskode,
                                   String nummer, String mail)
             throws InvalidInputException, DatabaseConnectionException {
-
         validateEmployeeData(navn, brugernavn, adgangskode, nummer, mail);
-
         Medarbejder existingEmployee = medarbejderDatabaseHandler.getById(medarbejderId);
         if (existingEmployee != null && !existingEmployee.getBrugernavn().equals(brugernavn)) {
             if (!isUsernameAvailable(brugernavn)) {
                 throw new InvalidInputException("Brugernavn er allerede i brug", "Brugernavn", brugernavn);
             }
         }
-
         Medarbejder medarbejder = new Medarbejder(navn, brugernavn, adgangskode, nummer, mail);
         medarbejder.setMedarbejderID(medarbejderId);
-
         return medarbejderDatabaseHandler.update(medarbejder);
     }
 
@@ -412,12 +360,13 @@ public class UseCase {
 
     public Medarbejder authenticateEmployee(String brugernavn, String adgangskode) throws DatabaseConnectionException {
         List<Medarbejder> employees = medarbejderDatabaseHandler.getAll();
-
-        return employees.stream()
-                .filter(medarbejder -> medarbejder.getBrugernavn().equals(brugernavn) &&
-                        medarbejder.getAdgangskode().equals(adgangskode))
-                .findFirst()
-                .orElse(null);
+        for (Medarbejder medarbejder : employees) {
+            if (medarbejder.getBrugernavn().equals(brugernavn) &&
+                    medarbejder.getAdgangskode().equals(adgangskode)) {
+                return medarbejder;
+            }
+        }
+        return null;
     }
 
     public List<Medarbejder> searchEmployeesByName(String searchTerm) throws DatabaseConnectionException {
@@ -429,31 +378,17 @@ public class UseCase {
         if (navn == null || navn.trim().isEmpty()) {
             throw new InvalidInputException("Navn må ikke være tomt", "Navn");
         }
-
         if (brugernavn == null || brugernavn.trim().isEmpty()) {
             throw new InvalidInputException("Brugernavn må ikke være tomt", "Brugernavn");
         }
-
         if (adgangskode == null || adgangskode.trim().isEmpty()) {
             throw new InvalidInputException("Adgangskode må ikke være tom", "Adgangskode");
         }
-
         if (nummer != null && !nummer.trim().isEmpty() && !PHONE_PATTERN.matcher(nummer).matches()) {
-            throw new InvalidInputException(
-                    "Ugyldigt telefonnummer format",
-                    "Nummer",
-                    nummer,
-                    "8 cifre, eventuelt adskilt af mellemrum (f.eks. 12 34 56 78)"
-            );
+            throw new InvalidInputException("Ugyldigt telefonnummer format", "Nummer", nummer, "8 cifre, eventuelt adskilt af mellemrum (f.eks. 12 34 56 78)");
         }
-
         if (mail != null && !mail.trim().isEmpty() && !EMAIL_PATTERN.matcher(mail).matches()) {
-            throw new InvalidInputException(
-                    "Ugyldig email format",
-                    "Mail",
-                    mail,
-                    "example@domain.com"
-            );
+            throw new InvalidInputException("Ugyldig email format", "Mail", mail, "example@domain.com");
         }
     }
 }
