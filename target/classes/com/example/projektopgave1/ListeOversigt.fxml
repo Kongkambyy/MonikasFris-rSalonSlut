@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+
+    <top>
+        <HBox spacing="10" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+
+            <Button text="I dag" />
+
+            <Button text="◀" />
+            <Button text="▶" />
+
+            <Label style="-fx-font-size: 16; -fx-font-weight: bold;" text="24-02-2024" />
+
+            <Region HBox.hgrow="ALWAYS" />
+
+            <ComboBox fx:id="customerBookingsComboBox" prefWidth="200" promptText="Kunde/Booking oversigt" />
+
+            <ToggleButton text="Dag" />
+            <ToggleButton text="Uge" />
+            <ToggleButton text="Måned" />
+            <ToggleButton text="År" />
+            <ToggleButton selected="true" text="Liste" />
+        </HBox>
+    </top>
+
+    <left>
+        <VBox spacing="8" BorderPane.alignment="CENTER_LEFT">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+            <Label style="-fx-font-weight: bold; -fx-font-size: 14;" text="Kalendere" />
+            <Separator />
+            <CheckBox selected="true" text="Alle Bookings" />
+            <CheckBox text="Jon" />
+            <CheckBox text="Joachim" />
+            <CheckBox text="Lasse" />
+            <CheckBox text="Gabriel" />
+        </VBox>
+    </left>
+
+    <center>
+        <VBox spacing="10" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Søg:" />
+                <TextField fx:id="searchField" promptText="Søg efter kunde eller booking..." HBox.hgrow="ALWAYS" />
+                <Label text="Filter:" />
+                <ComboBox fx:id="filterComboBox" promptText="Vælg filter" />
+                <Button text="Ryd" />
+            </HBox>
+
+            <Separator />
+
+            <Label style="-fx-font-weight: bold; -fx-font-size: 14;" text="Alle Bookinger" />
+            <TableView fx:id="bookingsTableView" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn prefWidth="80" text="Booking ID" />
+                    <TableColumn prefWidth="120" text="Dato" />
+                    <TableColumn prefWidth="80" text="Starttid" />
+                    <TableColumn prefWidth="80" text="Sluttid" />
+                    <TableColumn prefWidth="150" text="Kunde" />
+                    <TableColumn prefWidth="120" text="Medarbejder" />
+                    <TableColumn prefWidth="150" text="Behandling" />
+                    <TableColumn prefWidth="80" text="Status" />
+                </columns>
+                <placeholder>
+                    <Label text="Ingen bookinger at vise" />
+                </placeholder>
+            </TableView>
+
+            <Separator />
+
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Ny Booking" style="-fx-background-color: #e5e0b7; -fx-text-fill: white;" />
+                <Button text="Rediger" />
+                <Button text="Annuller Booking" style="-fx-background-color: #f44336; -fx-text-fill: white;" />
+                <Button text="Eksporter" />
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>
