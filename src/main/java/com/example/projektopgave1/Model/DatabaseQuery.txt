@@ -1,0 +1,45 @@
+Create Database MonikasFrisorsalon;
+
+use MonikasFrisorsalon;
+
+create table Medarbejdere (
+MedarbejderID int auto_increment not null,
+Navn varchar(255),
+Brugernavn varchar(255),
+Adgangskode varchar(255),
+Nummer varchar(20),
+Mail varchar(255),
+primary key(MedarbejderID)
+);
+
+create table kunde (
+KundeID int auto_increment not null,
+Navn varchar(255),
+Nummer varchar(20),
+Mail varchar(255),
+Adresse varchar(255),
+primary key(KundeID)
+);
+
+create table Behandling (
+BehandlingID int auto_increment not null,
+Behandling varchar(255),
+varighed int,
+pris int,
+primary key(BehandlingID)
+);
+
+create table Aftale(
+AftaleID int auto_increment not null,
+KundeID int not null,
+MedarbejderID int not null,
+BehandlingID int not null,
+Starttidspunkt DATETIME,
+Sluttidspunkt DATETIME,
+Status varchar(20),
+Oprettelsesdato DATE,
+primary key (aftaleID),
+foreign key (kundeID) references kunde(kundeID)
+on delete cascade
+on update cascade
+);
