@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.String?>
-<?import javafx.collections.FXCollections?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
@@ -10,30 +8,30 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
 
-<BorderPane prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
-
+<BorderPane prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.projektopgave1.Controller.KalendarOversigtController">
     <top>
         <HBox spacing="10" BorderPane.alignment="CENTER">
             <padding>
                 <Insets bottom="10" left="10" right="10" top="10" />
             </padding>
 
-            <Button text="I dag" />
+            <Button fx:id="todayButton" text="I dag" />
+            <Button fx:id="prevButton" text="◀" />
+            <Button fx:id="nextButton" text="▶" />
 
-            <Button text="◀" />
-            <Button text="▶" />
+            <Label fx:id="currentDateLabel" style="-fx-font-size: 16; -fx-font-weight: bold;" text="24-02-2024" />
 
-            <Label style="-fx-font-size: 16; -fx-font-weight: bold;" text="24-02-2024" />
-
-            <Region HBox.hgrow="ALWAYS" />
+            <HBox HBox.hgrow="ALWAYS" />
 
             <ComboBox fx:id="customerBookingsComboBox" prefWidth="200" promptText="Kunde/Booking oversigt">
                 <items>
@@ -45,10 +43,13 @@
                 </items>
             </ComboBox>
 
-            <ToggleButton text="Dag" />
-            <ToggleButton selected="true" text="Uge" />
-            <ToggleButton text="Måned" />
-            <ToggleButton text="År" />
+            <fx:define>
+                <ToggleGroup fx:id="viewToggleGroup" />
+            </fx:define>
+            <ToggleButton fx:id="dayToggle" text="Dag" toggleGroup="$viewToggleGroup" />
+            <ToggleButton fx:id="weekToggle" selected="true" text="Uge" toggleGroup="$viewToggleGroup" />
+            <ToggleButton fx:id="monthToggle" text="Måned" toggleGroup="$viewToggleGroup" />
+            <ToggleButton fx:id="yearToggle" text="År" toggleGroup="$viewToggleGroup" />
         </HBox>
     </top>
 
@@ -59,258 +60,147 @@
             </padding>
             <Label style="-fx-font-weight: bold; -fx-font-size: 14;" text="Kalendere" />
             <Separator />
-            <CheckBox selected="true" text="Alle Bookings" />
-            <CheckBox text="Jon" />
-            <CheckBox text="Joachim" />
-            <CheckBox text="Lasse" />
-            <CheckBox text="Gabriel" />
+            <CheckBox fx:id="allBookingsCheckBox" selected="true" text="Alle Bookings" />
+            <CheckBox fx:id="jonCheckBox" text="Jon" />
+            <CheckBox fx:id="joachimCheckBox" text="Joachim" />
+            <CheckBox fx:id="lasseCheckBox" text="Lasse" />
+            <CheckBox fx:id="gabrielCheckBox" text="Gabriel" />
         </VBox>
     </left>
 
     <center>
-        <ScrollPane fitToWidth="true" BorderPane.alignment="CENTER">
+        <ScrollPane fitToWidth="true" fitToHeight="true" BorderPane.alignment="CENTER">
             <content>
-                <GridPane hgap="2" vgap="2">
-                    <padding>
-                        <Insets bottom="10" left="10" right="10" top="10" />
-                    </padding>
-
-                    <columnConstraints>
-                        <ColumnConstraints prefWidth="80" />
-                        <ColumnConstraints hgrow="ALWAYS" />
-                        <ColumnConstraints hgrow="ALWAYS" />
-                        <ColumnConstraints hgrow="ALWAYS" />
-                        <ColumnConstraints hgrow="ALWAYS" />
-                        <ColumnConstraints hgrow="ALWAYS" />
-                        <ColumnConstraints hgrow="ALWAYS" />
-                        <ColumnConstraints hgrow="ALWAYS" />
-                    </columnConstraints>
-
-                    <Label style="-fx-font-weight: bold; -fx-background-color: #f0f0f0;" text="Tidspunkt" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                    <Label style="-fx-font-weight: bold; -fx-background-color: #f0f0f0;" text="Søndag, 15" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                    <Label style="-fx-font-weight: bold; -fx-background-color: #f0f0f0;" text="Mandag, 16" GridPane.columnIndex="2" GridPane.rowIndex="0" />
-                    <Label style="-fx-font-weight: bold; -fx-background-color: #f0f0f0;" text="Tirsdag, 17" GridPane.columnIndex="3" GridPane.rowIndex="0" />
-                    <Label style="-fx-font-weight: bold; -fx-background-color: #f0f0f0;" text="Onsdag, 18" GridPane.columnIndex="4" GridPane.rowIndex="0" />
-                    <Label style="-fx-font-weight: bold; -fx-background-color: #f0f0f0;" text="Torsdag, 19" GridPane.columnIndex="5" GridPane.rowIndex="0" />
-                    <Label style="-fx-font-weight: bold; -fx-background-color: #f0f0f0;" text="Fredag, 20" GridPane.columnIndex="6" GridPane.rowIndex="0" />
-                    <Label style="-fx-font-weight: bold; -fx-background-color: #f0f0f0;" text="Lørdag, 21" GridPane.columnIndex="7" GridPane.rowIndex="0" />
-
-
-                    <Label text="08:00" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="1" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="1" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="1" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="1" />
-
-                    <Label text="08:30" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="2" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="2" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="2" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="2" />
-
-                    <Label text="09:00" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="3" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="3" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="3" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="3" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="3" />
-
-                    <Label text="09:30" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="4" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="4" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="4" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="4" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="4" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="4" />
-
-                    <Label text="10:00" GridPane.columnIndex="0" GridPane.rowIndex="5" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="5" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="5" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="5" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="5" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="5" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="5" />
-
-                    <Label text="10:30" GridPane.columnIndex="0" GridPane.rowIndex="6" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="6" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="6" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="6" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="6" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="6" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="6" />
-
-                    <Label text="11:00" GridPane.columnIndex="0" GridPane.rowIndex="7" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="7" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="7" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="7" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="7" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="7" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="7" />
-
-                    <Label text="11:30" GridPane.columnIndex="0" GridPane.rowIndex="8" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="8" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="8" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="8" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="8" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="8" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="8" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="8" />
-
-                    <Label text="12:00" GridPane.columnIndex="0" GridPane.rowIndex="9" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="9" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="9" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="9" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="9" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="9" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="9" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="9" />
-
-                    <Label text="12:30" GridPane.columnIndex="0" GridPane.rowIndex="10" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="10" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="10" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="10" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="10" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="10" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="10" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="10" />
-
-                    <Label text="13:00" GridPane.columnIndex="0" GridPane.rowIndex="11" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="11" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="11" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="11" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="11" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="11" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="11" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="11" />
-
-                    <Label text="13:30" GridPane.columnIndex="0" GridPane.rowIndex="12" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="12" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="12" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="12" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="12" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="12" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="12" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="12" />
-
-                    <Label text="14:00" GridPane.columnIndex="0" GridPane.rowIndex="13" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="13" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="13" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="13" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="13" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="13" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="13" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="13" />
-
-                    <Label text="14:30" GridPane.columnIndex="0" GridPane.rowIndex="14" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="14" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="14" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="14" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="14" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="14" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="14" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="14" />
-
-                    <Label text="15:00" GridPane.columnIndex="0" GridPane.rowIndex="15" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="15" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="15" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="15" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="15" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="15" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="15" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="15" />
-
-                    <Label text="15:30" GridPane.columnIndex="0" GridPane.rowIndex="16" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="16" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="16" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="16" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="16" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="16" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="16" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="16" />
-
-                    <Label text="16:00" GridPane.columnIndex="0" GridPane.rowIndex="17" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="17" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="17" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="17" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="17" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="17" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="17" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="17" />
-
-                    <Label text="16:30" GridPane.columnIndex="0" GridPane.rowIndex="18" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="18" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="18" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="18" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="18" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="18" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="18" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="18" />
-
-                    <Label text="17:00" GridPane.columnIndex="0" GridPane.rowIndex="19" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="19" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="19" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="19" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="19" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="19" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="19" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="19" />
-
-                    <Label text="17:30" GridPane.columnIndex="0" GridPane.rowIndex="20" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="20" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="20" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="20" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="20" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="20" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="20" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="20" />
-
-                    <Label text="18:00" GridPane.columnIndex="0" GridPane.rowIndex="21" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="1" GridPane.rowIndex="21" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="2" GridPane.rowIndex="21" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="3" GridPane.rowIndex="21" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="4" GridPane.rowIndex="21" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="5" GridPane.rowIndex="21" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="6" GridPane.rowIndex="21" />
-                    <Label style="-fx-border-color: lightgray;" text="" GridPane.columnIndex="7" GridPane.rowIndex="21" />
-
-                    <rowConstraints>
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                    </rowConstraints>
-
-                </GridPane>
+                <BorderPane>
+                    <top>
+                        <!-- Week Days Header Row -->
+                        <GridPane hgap="1" vgap="1" style="-fx-background-color: #f0f0f0;">
+                            <columnConstraints>
+                                <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" minWidth="60" prefWidth="60" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                            </rowConstraints>
+                            <children>
+                                <Label text="Tid" GridPane.columnIndex="0" />
+                                <Label text="Mandag" GridPane.columnIndex="1" />
+                                <Label text="Tirsdag" GridPane.columnIndex="2" />
+                                <Label text="Onsdag" GridPane.columnIndex="3" />
+                                <Label text="Torsdag" GridPane.columnIndex="4" />
+                                <Label text="Fredag" GridPane.columnIndex="5" />
+                                <Label text="Lørdag" GridPane.columnIndex="6" />
+                                <Label text="Søndag" GridPane.columnIndex="7" />
+                            </children>
+                        </GridPane>
+                    </top>
+                    <center>
+                        <!-- Main Calendar Grid -->
+                        <GridPane fx:id="calendarGrid" hgap="1" vgap="1" style="-fx-border-color: #e0e0e0; -fx-border-width: 0.5;">
+                            <columnConstraints>
+                                <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="60" prefWidth="60" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <!-- These will be populated dynamically with time slots -->
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                            </rowConstraints>
+                            <columnConstraints>
+                                <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="60" prefWidth="60" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <!-- These will be populated dynamically with time slots -->
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="30" prefHeight="30" vgrow="SOMETIMES" />
+                            </rowConstraints>
+                            <children>
+                                <!-- Time labels - will be placed dynamically by controller -->
+                                <Label text="08:00" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                                <Label text="08:30" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                                <Label text="09:00" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                                <Label text="09:30" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                                <Label text="10:00" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                                <Label text="10:30" GridPane.rowIndex="5" GridPane.columnIndex="0" />
+                                <Label text="11:00" GridPane.rowIndex="6" GridPane.columnIndex="0" />
+                                <Label text="11:30" GridPane.rowIndex="7" GridPane.columnIndex="0" />
+                                <Label text="12:00" GridPane.rowIndex="8" GridPane.columnIndex="0" />
+                                <Label text="12:30" GridPane.rowIndex="9" GridPane.columnIndex="0" />
+                                <Label text="13:00" GridPane.rowIndex="10" GridPane.columnIndex="0" />
+                                <Label text="13:30" GridPane.rowIndex="11" GridPane.columnIndex="0" />
+                                <Label text="14:00" GridPane.rowIndex="12" GridPane.columnIndex="0" />
+                                <Label text="14:30" GridPane.rowIndex="13" GridPane.columnIndex="0" />
+                                <Label text="15:00" GridPane.rowIndex="14" GridPane.columnIndex="0" />
+                                <Label text="15:30" GridPane.rowIndex="15" GridPane.columnIndex="0" />
+                                <Label text="16:00" GridPane.rowIndex="16" GridPane.columnIndex="0" />
+                                <Label text="16:30" GridPane.rowIndex="17" GridPane.columnIndex="0" />
+                                <Label text="17:00" GridPane.rowIndex="18" GridPane.columnIndex="0" />
+                                <Label text="17:30" GridPane.rowIndex="19" GridPane.columnIndex="0" />
+                                <Label text="18:00" GridPane.rowIndex="20" GridPane.columnIndex="0" />
+                            </children>
+                            <padding>
+                                <Insets right="5" />
+                            </padding>
+                        </GridPane>
+                    </center>
+                </BorderPane>
             </content>
         </ScrollPane>
     </center>

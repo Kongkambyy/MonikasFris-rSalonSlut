@@ -24,7 +24,8 @@ public class HelloApplication extends Application {
 
         stage.setTitle("Monikas Frisørsalon - Kalendersystem");
         stage.setScene(scene);
-        stage.setMaximized(true);
+        stage.setMinWidth(900);
+        stage.setMinHeight(600);
         stage.show();
     }
 

@@ -20,6 +20,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class UseCase {
     private final AftaleDatabaseHandler aftaleDatabaseHandler;
@@ -367,6 +368,109 @@ public class UseCase {
             }
         }
         return null;
+    }
+
+    public List<Aftale> getActiveAppointmentsInRange(LocalDate startDate, LocalDate endDate)
+            throws DatabaseConnectionException {
+        List<Aftale> allAppointments = aftaleDatabaseHandler.getActiveAppointmentsInRange(startDate, endDate);
+        return allAppointments.stream()
+                .filter(a -> !a.getStatus().equals("Aflyst"))
+                .collect(Collectors.toList());
+    }
+
+    public List<Aftale> getFilteredAppointments(LocalDate date, List<Integer> employeeIds, String statusFilter)
+            throws DatabaseConnectionException {
+        List<Aftale> appointments = aftaleDatabaseHandler.findByDate(date);
+        List<Aftale> filteredAppointments = new ArrayList<>();
+
+        for (Aftale appointment : appointments) {
+            // Filter by employee
+            boolean includeByEmployee = employeeIds.isEmpty() || employeeIds.contains(appointment.getMedarbejderID());
+
+            // Filter by status
+            boolean includeByStatus = true;
+            if ("ACTIVE".equals(statusFilter) && "Aflyst".equals(appointment.getStatus())) {
+                includeByStatus = false;
+            }
+
+            if (includeByEmployee && includeByStatus) {
+                filteredAppointments.add(appointment);
+            }
+        }
+
+        return filteredAppointments;
+    }
+
+    public List<Integer> getSelectedEmployeeIds(boolean allSelected, List<Integer> selectedIds) {
+        if (allSelected) {
+            // Return empty list to indicate no filtering
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(selectedIds);
+    }
+
+    public List<LocalTime> getAvailableTimesForDay(LocalDate date, int medarbejderId, int behandlingId, int excludeAftaleId)
+            throws DatabaseConnectionException {
+
+        // Get the treatment to determine its duration
+        Behandling behandling = behandlingDatabaseHandler.getById(behandlingId);
+        if (behandling == null) {
+            return new ArrayList<>();
+        }
+
+        int treatmentDuration = behandling.getVarighed();
+
+        // Get all appointments for the employee on this date
+        List<Aftale> employeeAppointments = aftaleDatabaseHandler.findByEmployee(medarbejderId);
+        List<Aftale> dateAppointments = new ArrayList<>();
+
+        for (Aftale appointment : employeeAppointments) {
+            if (appointment.getStarttidspunkt().toLocalDate().equals(date) &&
+                    appointment.getAftaleID() != excludeAftaleId &&
+                    !appointment.getStatus().equals("Aflyst")) {
+                dateAppointments.add(appointment);
+            }
+        }
+
+        // Generate all possible time slots from opening to closing time
+        List<LocalTime> allPossibleSlots = new ArrayList<>();
+        LocalTime currentTime = OPENING_TIME;
+        while (currentTime.plusMinutes(treatmentDuration).isBefore(CLOSING_TIME) ||
+                currentTime.plusMinutes(treatmentDuration).equals(CLOSING_TIME)) {
+            allPossibleSlots.add(currentTime);
+            currentTime = currentTime.plusMinutes(30);
+        }
+
+        // Filter out unavailable time slots
+        List<LocalTime> availableSlots = new ArrayList<>();
+        for (LocalTime startTime : allPossibleSlots) {
+            LocalDateTime startDateTime = LocalDateTime.of(date, startTime);
+            LocalDateTime endDateTime = startDateTime.plusMinutes(treatmentDuration);
+
+            // Check if time is in the past
+            if (startDateTime.isBefore(LocalDateTime.now())) {
+                continue;
+            }
+
+            // Check if slot is available
+            boolean isAvailable = true;
+            for (Aftale appointment : dateAppointments) {
+                LocalDateTime appointmentStart = appointment.getStarttidspunkt();
+                LocalDateTime appointmentEnd = appointment.getSluttidspunkt();
+
+                // Check for overlap
+                if (!(endDateTime.isBefore(appointmentStart) || startDateTime.isAfter(appointmentEnd))) {
+                    isAvailable = false;
+                    break;
+                }
+            }
+
+            if (isAvailable) {
+                availableSlots.add(startTime);
+            }
+        }
+
+        return availableSlots;
     }
 
     public List<Medarbejder> searchEmployeesByName(String searchTerm) throws DatabaseConnectionException {
