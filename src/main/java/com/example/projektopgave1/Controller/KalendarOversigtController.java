@@ -5,12 +5,17 @@ import com.example.projektopgave1.Model.UseCases.UseCaseCalendar.AppointmentData
 import Utils.LoggerUtility;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.application.Platform;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -43,22 +48,16 @@ public class KalendarOversigtController {
     @FXML
     public void initialize() {
         try {
-            // Initialize the use case
             useCaseCalendar = new UseCaseCalendar();
 
-            // Update UI with initial data
             updateDateLabel();
 
-            // Set up event handlers
             setupEventHandlers();
 
-            // Set initial UI state
             setupInitialUIState();
 
-            // Set up calendar grid
             setupCalendarGrid();
 
-            // Load calendar data
             reloadCalendar();
 
             LoggerUtility.logEvent("Kalenderoversigtvisning initialiseret");
@@ -99,6 +98,29 @@ public class KalendarOversigtController {
         newBookingButton.setOnAction(event -> handleNewBooking());
         editButton.setOnAction(event -> handleEditBooking());
         cancelBookingButton.setOnAction(event -> handleCancelBooking());
+
+        customerBookingsComboBox.setOnAction(event -> {
+            String selectedView = customerBookingsComboBox.getValue();
+            if (selectedView == null) return;
+
+            try {
+                if (selectedView.equals("Listevisning")) {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/projektopgave1/ListeOversigt.fxml"));
+                    Parent root = loader.load();
+
+                    Scene currentScene = customerBookingsComboBox.getScene();
+                    Stage stage = (Stage) currentScene.getWindow();
+
+                    Scene newScene = new Scene(root, currentScene.getWidth(), currentScene.getHeight());
+                    stage.setScene(newScene);
+
+                    LoggerUtility.logEvent("Skiftet til listevisning");
+                }
+            } catch (Exception e) {
+                LoggerUtility.logError("Fejl ved skift til listevisning: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
     }
 
     private void updateEmployeeCheckboxState() {
@@ -110,11 +132,9 @@ public class KalendarOversigtController {
     }
 
     private void setupInitialUIState() {
-        // Set initial button states
         editButton.setDisable(true);
         cancelBookingButton.setDisable(true);
 
-        // Set initial checkbox states
         jonCheckBox.setSelected(true);
         joachimCheckBox.setSelected(true);
         lasseCheckBox.setSelected(true);

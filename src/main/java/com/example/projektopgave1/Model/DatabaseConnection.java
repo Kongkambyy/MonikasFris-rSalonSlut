@@ -11,7 +11,6 @@ public class DatabaseConnection {
     private String username;
     private String password;
 
-    // Private constructor to prevent instantiation
     private DatabaseConnection() {
         this.url = "jdbc:mysql://lasseblunckshillerx.tplinkdns.com:3306/MonikasFrisorsalon";
         this.username = "ZealandGruppen";

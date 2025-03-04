@@ -1,21 +1,28 @@
 package com.example.projektopgave1.Controller;
 
 import Utils.LoggerUtility;
+import com.example.projektopgave1.Model.UseCases.UseCaseCalendar;
 import com.example.projektopgave1.Model.UseCases.UseCaseListeOversigt;
 import com.example.projektopgave1.Model.UseCases.UseCaseListeOversigt.AppointmentListItem;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -59,25 +66,20 @@ public class ListeOversigtController {
     @FXML
     public void initialize() {
         try {
-            // Initialize use case
+
+            LoggerUtility.logEvent("Initialiserer listeoversigt controller");
             useCaseListeOversigt = new UseCaseListeOversigt();
 
-            // Set up view combobox
             setupViewComboBox();
 
-            // Set up table columns
             setupTableView();
 
-            // Set up event handlers
             setupEventHandlers();
 
-            // Set up employee checkboxes
             setupEmployeeCheckboxes();
 
-            // Update date label
             updateDateLabel();
 
-            // Initial load of appointments
             loadAppointments();
 
             LoggerUtility.logEvent("Listeoversigt initialiseret");
@@ -87,14 +89,12 @@ public class ListeOversigtController {
     }
 
     private void setupViewComboBox() {
-        // ComboBox er allerede sat op i FXML, så vi skal bare håndtere valg
         customerBookingsComboBox.setOnAction(event -> {
             String selectedView = customerBookingsComboBox.getValue();
             if (selectedView == null) return;
 
             try {
                 if (selectedView.equals("Kalender Oversigt")) {
-                    // Skift til kalendervisning
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/projektopgave1/KalenderOversigt.fxml"));
                     Parent root = loader.load();
 
@@ -106,7 +106,6 @@ public class ListeOversigtController {
 
                     LoggerUtility.logEvent("Skiftet til kalendervisning");
                 }
-                // Hvis "Listevisning" er valgt, er vi allerede i den rigtige visning
             } catch (IOException e) {
                 LoggerUtility.logError("Fejl ved skift mellem visninger: " + e.getMessage());
             }
@@ -117,30 +116,24 @@ public class ListeOversigtController {
         try {
             if (selectedView == null) return;
 
-            // Determine which view to show based on selection
             String fxmlPath = null;
 
             switch (selectedView) {
                 case "Kunde/Booking oversigt":
-                    // Stay in current view but reset filters
                     clearFilters();
                     return;
 
                 case "Alle Kunder":
-                    // Switch to customer view (not implemented)
                     showInfoAlert("Navigation", null, "Kunde-visning er ikke implementeret endnu.");
                     return;
 
                 case "Alle Bookinger":
                 case "Aktive Bookinger":
-                    // Already in booking list view - just update filters
                     if (selectedView.equals("Aktive Bookinger")) {
-                        // Only show active bookings
                         if (filterComboBox.getItems().contains("Aktiv")) {
                             filterComboBox.setValue("Aktiv");
                         }
                     } else {
-                        // Show all bookings
                         filterComboBox.setValue(null);
                     }
                     loadAppointments();
@@ -156,7 +149,6 @@ public class ListeOversigtController {
     }
 
     private void setupTableView() {
-        // Set up table columns
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
         startTimeColumn.setCellValueFactory(new PropertyValueFactory<>("startTime"));
@@ -166,10 +158,8 @@ public class ListeOversigtController {
         treatmentColumn.setCellValueFactory(new PropertyValueFactory<>("treatment"));
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        // Bind observable list to table
         bookingsTableView.setItems(appointmentsList);
 
-        // Add listener for selection changes
         bookingsTableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             boolean hasSelection = (newSelection != null);
             editButton.setDisable(!hasSelection);
@@ -178,43 +168,32 @@ public class ListeOversigtController {
     }
 
     private void setupEventHandlers() {
-        // Navigation buttons
-        todayButton.setOnAction(event -> handleTodayButton());
-        prevButton.setOnAction(event -> handlePreviousButton());
-        nextButton.setOnAction(event -> handleNextButton());
 
-        // Search and filter controls
         searchField.textProperty().addListener((obs, oldValue, newValue) -> handleSearchFieldChanged());
         filterComboBox.setOnAction(event -> handleFilterChanged());
         clearButton.setOnAction(event -> handleClearButtonClick());
 
-        // Employee checkboxes
         allBookingsCheckBox.setOnAction(event -> handleAllCheckboxChanged());
         jonCheckBox.setOnAction(event -> handleEmployeeCheckboxChanged());
         joachimCheckBox.setOnAction(event -> handleEmployeeCheckboxChanged());
         lasseCheckBox.setOnAction(event -> handleEmployeeCheckboxChanged());
         gabrielCheckBox.setOnAction(event -> handleEmployeeCheckboxChanged());
 
-        // View toggle buttons if present
         if (dayToggle != null) dayToggle.setOnAction(event -> handleViewToggleChanged());
         if (weekToggle != null) weekToggle.setOnAction(event -> handleViewToggleChanged());
         if (monthToggle != null) monthToggle.setOnAction(event -> handleViewToggleChanged());
         if (yearToggle != null) yearToggle.setOnAction(event -> handleViewToggleChanged());
 
-        // Action buttons
         newBookingButton.setOnAction(event -> handleNewBookingButton());
         editButton.setOnAction(event -> handleEditButton());
         cancelBookingButton.setOnAction(event -> handleCancelBookingButton());
-        exportButton.setOnAction(event -> handleExportButton());
 
-        // Initially disable edit/cancel buttons until selection
         editButton.setDisable(true);
         cancelBookingButton.setDisable(true);
     }
 
     private void handleViewToggleChanged() {
         try {
-            // Switch to calendar view if any of the toggle buttons are selected
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/projektopgave1/KalenderOversigt.fxml"));
             Parent root = loader.load();
 
@@ -231,7 +210,6 @@ public class ListeOversigtController {
     }
 
     private void setupEmployeeCheckboxes() {
-        // Set initial state
         allBookingsCheckBox.setSelected(true);
         updateEmployeeCheckboxState();
     }
@@ -257,27 +235,27 @@ public class ListeOversigtController {
 
     private void loadAppointments() {
         try {
-            // Clear existing items
             appointmentsList.clear();
 
-            // Get current search term
+            LoggerUtility.logEvent("Henter aftaler: '" + searchField.getText() + "'");
+
             String searchTerm = searchField.getText();
             useCaseListeOversigt.setSearchTerm(searchTerm);
 
-            // Get selected employees
             List<String> selectedEmployees = getSelectedEmployees();
             useCaseListeOversigt.setSelectedEmployees(selectedEmployees);
 
-            // Search and add results to list
             List<AppointmentListItem> appointments = useCaseListeOversigt.searchAppointments();
+            LoggerUtility.logEvent("Fandt " + appointments.size() + " aftaler");
+
             appointmentsList.addAll(appointments);
 
-            // Clear selection
             bookingsTableView.getSelectionModel().clearSelection();
             editButton.setDisable(true);
             cancelBookingButton.setDisable(true);
         } catch (Exception e) {
             LoggerUtility.logError("Fejl ved indlæsning af aftaler: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -285,7 +263,7 @@ public class ListeOversigtController {
         List<String> selectedEmployees = new ArrayList<>();
 
         if (allBookingsCheckBox.isSelected()) {
-            return selectedEmployees; // Empty list means all employees
+            return selectedEmployees;
         }
 
         if (jonCheckBox.isSelected()) {
@@ -310,27 +288,6 @@ public class ListeOversigtController {
         allBookingsCheckBox.setSelected(true);
         updateEmployeeCheckboxState();
         useCaseListeOversigt.clearFilters();
-        loadAppointments();
-    }
-
-    @FXML
-    private void handleTodayButton() {
-        useCaseListeOversigt.moveToToday();
-        updateDateLabel();
-        loadAppointments();
-    }
-
-    @FXML
-    private void handlePreviousButton() {
-        useCaseListeOversigt.moveToPreviousDay();
-        updateDateLabel();
-        loadAppointments();
-    }
-
-    @FXML
-    private void handleNextButton() {
-        useCaseListeOversigt.moveToNextDay();
-        updateDateLabel();
         loadAppointments();
     }
 
@@ -363,14 +320,12 @@ public class ListeOversigtController {
     @FXML
     private void handleNewBookingButton() {
         try {
-            // Show information dialog for now
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Ny Booking");
             alert.setHeaderText("Opret ny booking");
             alert.setContentText("Her ville du normalt se en dialog til at oprette en ny booking.");
             alert.showAndWait();
 
-            // After creating, reload appointments
             loadAppointments();
         } catch (Exception e) {
             LoggerUtility.logError("Fejl ved håndtering af ny booking: " + e.getMessage());
@@ -383,17 +338,94 @@ public class ListeOversigtController {
             AppointmentListItem selectedAppointment = bookingsTableView.getSelectionModel().getSelectedItem();
             if (selectedAppointment == null) return;
 
-            // Show information dialog for now
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Rediger Booking");
-            alert.setHeaderText("Rediger booking #" + selectedAppointment.getId());
-            alert.setContentText("Her ville du normalt se en dialog til at redigere en booking.");
-            alert.showAndWait();
+            UseCaseCalendar.AppointmentData appointmentData = useCaseListeOversigt.getAppointmentById(selectedAppointment.getId());
+            if (appointmentData == null) {
+                LoggerUtility.logError("Kunne ikke finde aftale detaljer for ID: " + selectedAppointment.getId());
+                return;
+            }
 
-            // After editing, reload appointments
-            loadAppointments();
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Rediger Booking");
+            dialog.setHeaderText("Rediger booking #" + selectedAppointment.getId());
+
+            ButtonType saveButtonType = new ButtonType("Gem", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+            grid.setPadding(new Insets(20, 150, 10, 10));
+
+            TextField customerField = new TextField(appointmentData.getCustomerName());
+            TextField treatmentField = new TextField(appointmentData.getTreatment());
+
+            ComboBox<String> employeeCombo = new ComboBox<>();
+            employeeCombo.getItems().addAll("Jon", "Joachim", "Lasse", "Gabriel");
+            employeeCombo.setValue(appointmentData.getEmployee());
+
+            DatePicker datePicker = new DatePicker(appointmentData.getDate());
+
+            ComboBox<String> startTimeCombo = new ComboBox<>();
+            ComboBox<String> endTimeCombo = new ComboBox<>();
+
+            for (int hour = 8; hour <= 18; hour++) {
+                startTimeCombo.getItems().add(String.format("%02d:00", hour));
+                endTimeCombo.getItems().add(String.format("%02d:00", hour));
+
+                if (hour < 18) {
+                    startTimeCombo.getItems().add(String.format("%02d:30", hour));
+                    endTimeCombo.getItems().add(String.format("%02d:30", hour));
+                }
+            }
+
+            startTimeCombo.setValue(appointmentData.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+            endTimeCombo.setValue(appointmentData.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+
+            grid.add(new Label("Kunde:"), 0, 0);
+            grid.add(customerField, 1, 0);
+            grid.add(new Label("Behandling:"), 0, 1);
+            grid.add(treatmentField, 1, 1);
+            grid.add(new Label("Medarbejder:"), 0, 2);
+            grid.add(employeeCombo, 1, 2);
+            grid.add(new Label("Dato:"), 0, 3);
+            grid.add(datePicker, 1, 3);
+            grid.add(new Label("Starttid:"), 0, 4);
+            grid.add(startTimeCombo, 1, 4);
+            grid.add(new Label("Sluttid:"), 0, 5);
+            grid.add(endTimeCombo, 1, 5);
+
+            dialog.getDialogPane().setContent(grid);
+            Platform.runLater(customerField::requestFocus);
+
+            Optional<ButtonType> result = dialog.showAndWait();
+            if (result.isPresent() && result.get() == saveButtonType) {
+                String startTimeStr = startTimeCombo.getValue();
+                String endTimeStr = endTimeCombo.getValue();
+                LocalTime startTime = LocalTime.parse(startTimeStr, DateTimeFormatter.ofPattern("HH:mm"));
+                LocalTime endTime = LocalTime.parse(endTimeStr, DateTimeFormatter.ofPattern("HH:mm"));
+                LocalDate selectedDate = datePicker.getValue();
+
+                useCaseListeOversigt.updateAppointment(
+                        selectedAppointment.getId(),
+                        customerField.getText(),
+                        treatmentField.getText(),
+                        employeeCombo.getValue(),
+                        selectedDate,
+                        startTime,
+                        endTime
+                );
+
+                loadAppointments();
+
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Booking Opdateret");
+                alert.setHeaderText(null);
+                alert.setContentText("Booking #" + selectedAppointment.getId() + " er blevet opdateret.");
+                alert.showAndWait();
+            }
         } catch (Exception e) {
             LoggerUtility.logError("Fejl ved håndtering af rediger booking: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -403,7 +435,6 @@ public class ListeOversigtController {
             AppointmentListItem selectedAppointment = bookingsTableView.getSelectionModel().getSelectedItem();
             if (selectedAppointment == null) return;
 
-            // Show confirmation dialog
             Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
             confirmAlert.setTitle("Bekræft Annullering");
             confirmAlert.setHeaderText("Er du sikker på, at du vil annullere denne booking?");
@@ -411,59 +442,20 @@ public class ListeOversigtController {
 
             Optional<ButtonType> result = confirmAlert.showAndWait();
             if (result.isPresent() && result.get() == ButtonType.OK) {
-                // Cancel booking
                 useCaseListeOversigt.cancelAppointment(selectedAppointment.getId());
 
-                // Show confirmation
+                LoggerUtility.logEvent("Genindlæser bookinger efter annullering");
+                loadAppointments();
+
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Booking Annulleret");
                 alert.setHeaderText(null);
                 alert.setContentText("Booking #" + selectedAppointment.getId() + " er blevet annulleret.");
                 alert.showAndWait();
-
-                // Reload appointments
-                loadAppointments();
             }
         } catch (Exception e) {
             LoggerUtility.logError("Fejl ved annullering af booking: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleExportButton() {
-        try {
-            // Get current table items
-            List<AppointmentListItem> appointments = new ArrayList<>(bookingsTableView.getItems());
-
-            if (appointments.isEmpty()) {
-                showInfoAlert("Ingen data", null, "Der er ingen aftaler at eksportere.");
-                return;
-            }
-
-            // Open file chooser
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Gem CSV fil");
-            fileChooser.getExtensionFilters().add(
-                    new FileChooser.ExtensionFilter("CSV filer", "*.csv")
-            );
-            fileChooser.setInitialFileName("aftaler.csv");
-
-            // Show save dialog
-            File file = fileChooser.showSaveDialog(bookingsTableView.getScene().getWindow());
-            if (file != null) {
-                // Export to CSV
-                boolean success = useCaseListeOversigt.exportAppointmentsToCsv(appointments, file.getAbsolutePath());
-
-                // Show result dialog
-                if (success) {
-                    showInfoAlert("Eksport fuldført", null, "Aftaler er eksporteret til " + file.getName());
-                } else {
-                    showErrorAlert("Eksport fejlet", null, "Der opstod en fejl under eksport af aftaler.");
-                }
-            }
-        } catch (Exception e) {
-            LoggerUtility.logError("Fejl ved eksport af aftaler: " + e.getMessage());
-            showErrorAlert("Eksport fejlet", null, "Der opstod en uventet fejl: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

@@ -171,7 +171,6 @@ public class UseCaseCalendar {
                     String customerName = kunde != null ? kunde.getNavn() : "Ukendt kunde";
                     String treatmentName = behandling != null ? behandling.getBehandling() : "Ukendt behandling";
 
-                    // Convert to presentation model
                     AppointmentData appointmentData = new AppointmentData(
                             aftale.getAftaleID(),
                             customerName,

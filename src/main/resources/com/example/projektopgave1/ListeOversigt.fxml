@@ -14,31 +14,36 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
 
-<BorderPane prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
-
+<BorderPane prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.projektopgave1.Controller.ListeOversigtController">
     <top>
         <HBox spacing="10" BorderPane.alignment="CENTER">
             <padding>
                 <Insets bottom="10" left="10" right="10" top="10" />
             </padding>
 
-            <Button text="I dag" />
-
-            <Button text="◀" />
-            <Button text="▶" />
-
-            <Label style="-fx-font-size: 16; -fx-font-weight: bold;" text="24-02-2024" />
-
+            <Button fx:id="todayButton" text="I dag" />
+            <Button fx:id="prevButton" text="◀" />
+            <Button fx:id="nextButton" text="▶" />
+            <Label fx:id="currentDateLabel" style="-fx-font-size: 16; -fx-font-weight: bold;" text="24-02-2024" />
             <Region HBox.hgrow="ALWAYS" />
-
-            <ComboBox fx:id="customerBookingsComboBox" prefWidth="200" promptText="Kunde/Booking oversigt" />
-
-            <ToggleButton text="Dag" />
-            <ToggleButton text="Uge" />
-            <ToggleButton text="Måned" />
-            <ToggleButton text="År" />
-            <ToggleButton selected="true" text="Liste" />
+            <ComboBox fx:id="customerBookingsComboBox" prefWidth="200" promptText="Vælg visning">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="Kalender Oversigt" />
+                        <String fx:value="Listevisning" />
+                    </FXCollections>
+                </items>
+                <value>
+                    <String fx:value="Listevisning" />
+                </value>
+            </ComboBox>
+            <ToggleButton fx:id="dayToggle" text="Dag" />
+            <ToggleButton fx:id="weekToggle" text="Uge" />
+            <ToggleButton fx:id="monthToggle" text="Måned" />
+            <ToggleButton fx:id="yearToggle" text="År" />
         </HBox>
     </top>
 
@@ -49,11 +54,11 @@
             </padding>
             <Label style="-fx-font-weight: bold; -fx-font-size: 14;" text="Kalendere" />
             <Separator />
-            <CheckBox selected="true" text="Alle Bookings" />
-            <CheckBox text="Jon" />
-            <CheckBox text="Joachim" />
-            <CheckBox text="Lasse" />
-            <CheckBox text="Gabriel" />
+            <CheckBox fx:id="allBookingsCheckBox" selected="true" text="Alle Bookings" />
+            <CheckBox fx:id="jonCheckBox" text="Jon" />
+            <CheckBox fx:id="joachimCheckBox" text="Joachim" />
+            <CheckBox fx:id="lasseCheckBox" text="Lasse" />
+            <CheckBox fx:id="gabrielCheckBox" text="Gabriel" />
         </VBox>
     </left>
 
@@ -68,7 +73,7 @@
                 <TextField fx:id="searchField" promptText="Søg efter kunde eller booking..." HBox.hgrow="ALWAYS" />
                 <Label text="Filter:" />
                 <ComboBox fx:id="filterComboBox" promptText="Vælg filter" />
-                <Button text="Ryd" />
+                <Button fx:id="clearButton" text="Ryd" />
             </HBox>
 
             <Separator />
@@ -76,14 +81,14 @@
             <Label style="-fx-font-weight: bold; -fx-font-size: 14;" text="Alle Bookinger" />
             <TableView fx:id="bookingsTableView" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn prefWidth="80" text="Booking ID" />
-                    <TableColumn prefWidth="120" text="Dato" />
-                    <TableColumn prefWidth="80" text="Starttid" />
-                    <TableColumn prefWidth="80" text="Sluttid" />
-                    <TableColumn prefWidth="150" text="Kunde" />
-                    <TableColumn prefWidth="120" text="Medarbejder" />
-                    <TableColumn prefWidth="150" text="Behandling" />
-                    <TableColumn prefWidth="80" text="Status" />
+                    <TableColumn fx:id="idColumn" prefWidth="80" text="Booking ID" />
+                    <TableColumn fx:id="dateColumn" prefWidth="120" text="Dato" />
+                    <TableColumn fx:id="startTimeColumn" prefWidth="80" text="Starttid" />
+                    <TableColumn fx:id="endTimeColumn" prefWidth="80" text="Sluttid" />
+                    <TableColumn fx:id="customerColumn" prefWidth="150" text="Kunde" />
+                    <TableColumn fx:id="employeeColumn" prefWidth="120" text="Medarbejder" />
+                    <TableColumn fx:id="treatmentColumn" prefWidth="150" text="Behandling" />
+                    <TableColumn fx:id="statusColumn" prefWidth="80" text="Status" />
                 </columns>
                 <placeholder>
                     <Label text="Ingen bookinger at vise" />
@@ -93,10 +98,9 @@
             <Separator />
 
             <HBox spacing="10" alignment="CENTER_RIGHT">
-                <Button text="Ny Booking" style="-fx-background-color: #e5e0b7; -fx-text-fill: white;" />
-                <Button text="Rediger" />
-                <Button text="Annuller Booking" style="-fx-background-color: #f44336; -fx-text-fill: white;" />
-                <Button text="Eksporter" />
+                <Button fx:id="newBookingButton" text="Ny Booking" style="-fx-background-color: #e5e0b7; -fx-text-fill: black;" />
+                <Button fx:id="editButton" text="Rediger" />
+                <Button fx:id="cancelBookingButton" text="Annuller Booking" style="-fx-background-color: #f44336; -fx-text-fill: white;" />
             </HBox>
         </VBox>
     </center>

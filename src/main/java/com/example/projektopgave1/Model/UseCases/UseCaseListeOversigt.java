@@ -13,6 +13,7 @@ import com.example.projektopgave1.Model.Entiteter.Medarbejder;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -121,19 +122,6 @@ public class UseCaseListeOversigt {
         public String getStatus() { return status; }
     }
 
-    public void moveToToday() {
-        calendarUseCase.moveToToday();
-        currentDate = calendarUseCase.getCurrentDate();
-    }
-
-    public void moveToPreviousDay() {
-        currentDate = currentDate.minusDays(1);
-    }
-
-    public void moveToNextDay() {
-        currentDate = currentDate.plusDays(1);
-    }
-
     public LocalDate getCurrentDate() {
         return currentDate;
     }
@@ -199,56 +187,39 @@ public class UseCaseListeOversigt {
         return appointments;
     }
 
-    public List<AppointmentListItem> getAppointmentsByDate(LocalDate date) {
-        List<AppointmentListItem> result = new ArrayList<>();
-        try {
-            List<Aftale> appointments = aftaleDatabaseHandler.findByDate(date);
-            for (Aftale aftale : appointments) {
-                AppointmentListItem item = convertToListItem(aftale);
-                if (item != null) result.add(item);
-            }
-        } catch (DatabaseConnectionException e) {
-            LoggerUtility.logError("Fejl ved hentning af aftaler med dato " + e.getMessage());
-        }
-        return result;
-    }
-
     public List<AppointmentListItem> searchAppointments() {
-        if (searchTerm.isEmpty() && selectedEmployees.isEmpty()) return getAppointmentsByDate(currentDate);
         List<AppointmentListItem> result = new ArrayList<>();
         try {
-            List<Aftale> appointments = searchTerm.isEmpty() ? aftaleDatabaseHandler.findByDate(currentDate) : aftaleDatabaseHandler.getAll();
+            List<Aftale> appointments = aftaleDatabaseHandler.getAll();
+            LoggerUtility.logEvent("Henter alle aftaler. Antal: " + appointments.size());
+
             for (Aftale aftale : appointments) {
                 try {
-                    if (searchTerm.isEmpty() && !aftale.getStarttidspunkt().toLocalDate().equals(currentDate))
-                        continue;
-                    Kunde kunde = kundeDatabaseHandler.readById(aftale.getKundeID());
-                    Medarbejder medarbejder = medarbejderDatabaseHandler.getById(aftale.getMedarbejderID());
-                    Behandling behandling = behandlingDatabaseHandler.getById(aftale.getBehandlingID());
-                    if (!selectedEmployees.isEmpty() && medarbejder != null && !selectedEmployees.contains(medarbejder.getNavn()))
-                        continue;
-                    boolean matches = searchTerm.isEmpty();
-                    if (!matches) {
-                        if ((kunde != null && kunde.getNavn().toLowerCase().contains(searchTerm)) ||
-                                (medarbejder != null && medarbejder.getNavn().toLowerCase().contains(searchTerm)) ||
-                                (behandling != null && behandling.getBehandling().toLowerCase().contains(searchTerm)) ||
-                                aftale.getStatus().toLowerCase().contains(searchTerm)) {
-                            matches = true;
+                    if (!searchTerm.isEmpty() || !selectedEmployees.isEmpty()) {
+                        Kunde kunde = kundeDatabaseHandler.readById(aftale.getKundeID());
+                        Medarbejder medarbejder = medarbejderDatabaseHandler.getById(aftale.getMedarbejderID());
+
+                        if (!selectedEmployees.isEmpty() && medarbejder != null && !selectedEmployees.contains(medarbejder.getNavn())) {
+                            continue;
+                        }
+
+                        if (!searchTerm.isEmpty()) {
+                            boolean matches = false;
+                            if ((kunde != null && kunde.getNavn().toLowerCase().contains(searchTerm)) ||
+                                    (medarbejder != null && medarbejder.getNavn().toLowerCase().contains(searchTerm)) ||
+                                    aftale.getStatus().toLowerCase().contains(searchTerm)) {
+                                matches = true;
+                            }
+
+                            if (!matches) {
+                                continue;
+                            }
                         }
                     }
-                    if (matches) {
-                        AppointmentListItem item = createListItem(
-                                aftale.getAftaleID(),
-                                aftale.getStarttidspunkt().toLocalDate(),
-                                aftale.getStarttidspunkt().toLocalTime(),
-                                aftale.getSluttidspunkt().toLocalTime(),
-                                kunde != null ? kunde.getNavn() : "Ukendt",
-                                medarbejder != null ? medarbejder.getNavn() : "Ukendt",
-                                behandling != null ? behandling.getBehandling() : "Ukendt",
-                                aftale.getStatus()
-                        );
-                        result.add(item);
-                    }
+
+                    AppointmentListItem item = convertToListItem(aftale);
+                    if (item != null) result.add(item);
+
                 } catch (Exception e) {
                     LoggerUtility.logError("Fejl under filtrering af aftale " + aftale.getAftaleID() + ": " + e.getMessage());
                 }
@@ -275,39 +246,6 @@ public class UseCaseListeOversigt {
 
     public UseCaseCalendar.AppointmentData getAppointmentById(int appointmentId) {
         return calendarUseCase.getAppointmentById(appointmentId);
-    }
-
-    public boolean exportAppointmentsToCsv(List<AppointmentListItem> appointments, String filePath) {
-        if (appointments == null || appointments.isEmpty()) return false;
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            writer.write("ID,Dato,Starttid,Sluttid,Kunde,Medarbejder,Behandling,Status");
-            writer.newLine();
-            for (AppointmentListItem item : appointments) {
-                StringBuilder line = new StringBuilder();
-                line.append(item.getId()).append(",");
-                line.append(item.getDate()).append(",");
-                line.append(item.getStartTime()).append(",");
-                line.append(item.getEndTime()).append(",");
-                line.append(escapeForCsv(item.getCustomerName())).append(",");
-                line.append(escapeForCsv(item.getEmployeeName())).append(",");
-                line.append(escapeForCsv(item.getTreatment())).append(",");
-                line.append(escapeForCsv(item.getStatus()));
-                writer.write(line.toString());
-                writer.newLine();
-            }
-            return true;
-        } catch (Exception e) {
-            LoggerUtility.logError("Fejl ved eksport til CSV: " + e.getMessage());
-            return false;
-        }
-    }
-
-    private String escapeForCsv(String value) {
-        if (value == null) return "";
-        String escaped = value.replace("\"", "\"\"");
-        if (escaped.contains(",") || escaped.contains("\n") || escaped.contains("\""))
-            escaped = "\"" + escaped + "\"";
-        return escaped;
     }
 
     private AppointmentListItem convertToListItem(Aftale aftale) {
