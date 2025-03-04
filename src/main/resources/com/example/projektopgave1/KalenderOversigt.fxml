@@ -33,14 +33,16 @@
 
             <HBox HBox.hgrow="ALWAYS" />
 
-            <ComboBox fx:id="customerBookingsComboBox" prefWidth="200" promptText="Kunde/Booking oversigt">
+            <ComboBox fx:id="customerBookingsComboBox" prefWidth="200" promptText="Vælg visning">
                 <items>
                     <FXCollections fx:factory="observableArrayList">
-                        <String fx:value="Alle Kunder" />
-                        <String fx:value="Alle Bookinger" />
-                        <String fx:value="Aktive Bookinger" />
+                        <String fx:value="Kalender Oversigt" />
+                        <String fx:value="Listevisning" />
                     </FXCollections>
                 </items>
+                <value>
+                    <String fx:value="Listevisning" />
+                </value>
             </ComboBox>
 
             <fx:define>
