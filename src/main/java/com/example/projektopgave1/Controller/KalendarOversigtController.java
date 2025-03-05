@@ -333,11 +333,19 @@ public class KalendarOversigtController {
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 150, 10, 10));
 
-        TextField customerField = new TextField(currentData.getCustomerName());
-        TextField treatmentField = new TextField(currentData.getTreatment());
+        // Customer ComboBox with database values instead of TextField
+        ComboBox<String> customerCombo = new ComboBox<>();
+        customerCombo.getItems().addAll(useCaseCalendar.getAllCustomerNames());
+        customerCombo.setValue(currentData.getCustomerName());
 
+        // Treatment ComboBox with database values instead of TextField
+        ComboBox<String> treatmentCombo = new ComboBox<>();
+        treatmentCombo.getItems().addAll(useCaseCalendar.getAllTreatmentNames());
+        treatmentCombo.setValue(currentData.getTreatment());
+
+        // Employee ComboBox with database values instead of hardcoded values
         ComboBox<String> employeeCombo = new ComboBox<>();
-        employeeCombo.getItems().addAll("Jon", "Joachim", "Lasse", "Gabriel");
+        employeeCombo.getItems().addAll(useCaseCalendar.getAllEmployeeNames());
         employeeCombo.setValue(currentData.getEmployee());
 
         DatePicker datePicker = new DatePicker(currentData.getDate());
@@ -350,10 +358,21 @@ public class KalendarOversigtController {
         startTimeCombo.setValue(currentData.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")));
         endTimeCombo.setValue(currentData.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")));
 
-        addControlsToGrid(grid, customerField, treatmentField, employeeCombo, datePicker, startTimeCombo, endTimeCombo);
+        grid.add(new Label("Kunde:"), 0, 0);
+        grid.add(customerCombo, 1, 0);
+        grid.add(new Label("Behandling:"), 0, 1);
+        grid.add(treatmentCombo, 1, 1);
+        grid.add(new Label("Medarbejder:"), 0, 2);
+        grid.add(employeeCombo, 1, 2);
+        grid.add(new Label("Dato:"), 0, 3);
+        grid.add(datePicker, 1, 3);
+        grid.add(new Label("Starttid:"), 0, 4);
+        grid.add(startTimeCombo, 1, 4);
+        grid.add(new Label("Sluttid:"), 0, 5);
+        grid.add(endTimeCombo, 1, 5);
 
         dialog.getDialogPane().setContent(grid);
-        Platform.runLater(customerField::requestFocus);
+        Platform.runLater(customerCombo::requestFocus);
 
         return dialog;
     }
@@ -390,8 +409,9 @@ public class KalendarOversigtController {
     private void processEditDialogResult(Dialog<ButtonType> dialog, int appointmentId) {
         GridPane grid = (GridPane) dialog.getDialogPane().getContent();
 
-        TextField customerField = (TextField) getNodeByRowColumnIndex(0, 1, grid);
-        TextField treatmentField = (TextField) getNodeByRowColumnIndex(1, 1, grid);
+        // Update to use ComboBox instead of TextField
+        ComboBox<String> customerCombo = (ComboBox<String>) getNodeByRowColumnIndex(0, 1, grid);
+        ComboBox<String> treatmentCombo = (ComboBox<String>) getNodeByRowColumnIndex(1, 1, grid);
         ComboBox<String> employeeCombo = (ComboBox<String>) getNodeByRowColumnIndex(2, 1, grid);
         DatePicker datePicker = (DatePicker) getNodeByRowColumnIndex(3, 1, grid);
         ComboBox<String> startTimeCombo = (ComboBox<String>) getNodeByRowColumnIndex(4, 1, grid);
@@ -405,8 +425,8 @@ public class KalendarOversigtController {
 
         useCaseCalendar.updateAppointment(
                 appointmentId,
-                customerField.getText(),
-                treatmentField.getText(),
+                customerCombo.getValue(),
+                treatmentCombo.getValue(),
                 employeeCombo.getValue(),
                 startTime,
                 endTime,

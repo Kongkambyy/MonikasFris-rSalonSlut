@@ -356,11 +356,22 @@ public class ListeOversigtController {
             grid.setVgap(10);
             grid.setPadding(new Insets(20, 150, 10, 10));
 
-            TextField customerField = new TextField(appointmentData.getCustomerName());
-            TextField treatmentField = new TextField(appointmentData.getTreatment());
+            // We need to create a separate UseCaseCalendar to access these methods
+            UseCaseCalendar calendarUseCase = new UseCaseCalendar();
 
+            // Customer ComboBox with database values
+            ComboBox<String> customerCombo = new ComboBox<>();
+            customerCombo.getItems().addAll(calendarUseCase.getAllCustomerNames());
+            customerCombo.setValue(appointmentData.getCustomerName());
+
+            // Treatment ComboBox with database values
+            ComboBox<String> treatmentCombo = new ComboBox<>();
+            treatmentCombo.getItems().addAll(calendarUseCase.getAllTreatmentNames());
+            treatmentCombo.setValue(appointmentData.getTreatment());
+
+            // Employee ComboBox with database values
             ComboBox<String> employeeCombo = new ComboBox<>();
-            employeeCombo.getItems().addAll("Jon", "Joachim", "Lasse", "Gabriel");
+            employeeCombo.getItems().addAll(calendarUseCase.getAllEmployeeNames());
             employeeCombo.setValue(appointmentData.getEmployee());
 
             DatePicker datePicker = new DatePicker(appointmentData.getDate());
@@ -368,6 +379,7 @@ public class ListeOversigtController {
             ComboBox<String> startTimeCombo = new ComboBox<>();
             ComboBox<String> endTimeCombo = new ComboBox<>();
 
+            // Populate time ComboBoxes
             for (int hour = 8; hour <= 18; hour++) {
                 startTimeCombo.getItems().add(String.format("%02d:00", hour));
                 endTimeCombo.getItems().add(String.format("%02d:00", hour));
@@ -382,9 +394,9 @@ public class ListeOversigtController {
             endTimeCombo.setValue(appointmentData.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")));
 
             grid.add(new Label("Kunde:"), 0, 0);
-            grid.add(customerField, 1, 0);
+            grid.add(customerCombo, 1, 0);
             grid.add(new Label("Behandling:"), 0, 1);
-            grid.add(treatmentField, 1, 1);
+            grid.add(treatmentCombo, 1, 1);
             grid.add(new Label("Medarbejder:"), 0, 2);
             grid.add(employeeCombo, 1, 2);
             grid.add(new Label("Dato:"), 0, 3);
@@ -395,7 +407,7 @@ public class ListeOversigtController {
             grid.add(endTimeCombo, 1, 5);
 
             dialog.getDialogPane().setContent(grid);
-            Platform.runLater(customerField::requestFocus);
+            Platform.runLater(customerCombo::requestFocus);
 
             Optional<ButtonType> result = dialog.showAndWait();
             if (result.isPresent() && result.get() == saveButtonType) {
@@ -407,8 +419,8 @@ public class ListeOversigtController {
 
                 useCaseListeOversigt.updateAppointment(
                         selectedAppointment.getId(),
-                        customerField.getText(),
-                        treatmentField.getText(),
+                        customerCombo.getValue(),
+                        treatmentCombo.getValue(),
                         employeeCombo.getValue(),
                         selectedDate,
                         startTime,
