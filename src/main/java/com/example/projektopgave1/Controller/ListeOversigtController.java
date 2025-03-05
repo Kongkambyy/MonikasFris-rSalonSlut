@@ -16,6 +16,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -320,15 +321,30 @@ public class ListeOversigtController {
     @FXML
     private void handleNewBookingButton() {
         try {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Ny Booking");
-            alert.setHeaderText("Opret ny booking");
-            alert.setContentText("Her ville du normalt se en dialog til at oprette en ny booking.");
-            alert.showAndWait();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/projektopgave1/OpretBooking.fxml"));
+            Parent page = loader.load();
 
-            loadAppointments();
-        } catch (Exception e) {
-            LoggerUtility.logError("Fejl ved håndtering af ny booking: " + e.getMessage());
+            // Create the Stage
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Opret Ny Booking");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(bookingsTableView.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            // Set the controller
+            OpretBookingController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+
+            // Show the dialog and wait until the user closes it
+            dialogStage.showAndWait();
+
+            // If save was clicked, reload appointments
+            if (controller.isSaveClicked()) {
+                loadAppointments();
+            }
+        } catch (IOException e) {
+            LoggerUtility.logError("Fejl ved åbning af booking-dialog: " + e.getMessage());
         }
     }
 
