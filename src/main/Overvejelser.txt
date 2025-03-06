@@ -1,0 +1,30 @@
+﻿Problematikker med opgaven:
+- Svært at implementere et simpelt billede til vores login-screen
+- JavaFX og FXML versionerne var irriterende
+- Nogle af vores Use-Cases har noget kode-overlap
+- UI
+
+----------------------------------------------------------
+Ting der kan gøres bedre:
+- Bedre implementering af vores custom-exceptions
+- Der kunne være bedre brug af interfaces
+- Et klart valg af designmønster i begyndelsen af processen
+- UI kan ikke tilpasse sig fuld-skærm :)
+- Navngivning af metoder
+- Ikke blande engelsk og dansk
+- Vores søgefunktion
+
+----------------------------------------------------------
+Ting der er gået godt:
+- Good vibes
+- MVC arkitektur
+- Ingen problemer med database-integrationen
+- Alle funktioner virker som de skal
+- God struktur har gjort det nemt at arbejde videre på
+- Logning
+
+----------------------------------------------------------
+Ting der kan bygges videre på:
+- Tilføjelse af medarbejdere
+- SMS-Bekræftelser
+- Evt. kan Jon ikke klippe en fade, kun Joachim kan

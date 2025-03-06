@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
@@ -9,8 +9,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
 
-
-<AnchorPane prefHeight="589.0" prefWidth="779.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="589.0" prefWidth="779.0" xmlns="http://javafx.com/javafx/22.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.projektopgave1.Controller.LoginMenuController">
     <children>
         <Label alignment="TOP_LEFT" layoutX="14.0" layoutY="14.0" prefWidth="210.0" style="-fx-font-size: 24; -fx-font-weight: bold;" text="Monika's Frisørsalon">
             <cursor>
@@ -35,11 +34,11 @@
                         <Insets top="20.0" />
                     </padding>
                 </Label>
-                <TextField fx:id="usernameTextField" maxWidth="200.0" text="Brugernavn" />
-                <TextField fx:id="passwordTextField" maxWidth="200.0" prefHeight="26.0" prefWidth="292.0" text="Adgangskode" />
-                <Button fx:id="loginButton" mnemonicParsing="false" style="-fx-background-color: #e5e0b7;" text="Log Ind" />
+                <TextField fx:id="usernameTextField" maxWidth="200.0" promptText="Brugernavn" />
+                <TextField fx:id="passwordTextField" maxWidth="200.0" prefHeight="26.0" prefWidth="292.0" promptText="Adgangskode" />
+                <Button fx:id="loginButton" mnemonicParsing="false" onAction="#handleLogin" style="-fx-background-color: #e5e0b7;" text="Log Ind" />
             </children>
         </VBox>
-        <ImageView fitHeight="589.0" fitWidth="389.0" layoutX="390.0" pickOnBounds="true" preserveRatio="true" />
+        <ImageView fx:id="salonImageView" fitHeight="989.0" fitWidth="789.0" layoutX="390.0" pickOnBounds="true" preserveRatio="true" />
     </children>
 </AnchorPane>

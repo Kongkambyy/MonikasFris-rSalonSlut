@@ -324,7 +324,6 @@ public class ListeOversigtController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/projektopgave1/OpretBooking.fxml"));
             Parent page = loader.load();
 
-            // Create the Stage
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Opret Ny Booking");
             dialogStage.initModality(Modality.WINDOW_MODAL);
@@ -332,14 +331,11 @@ public class ListeOversigtController {
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
 
-            // Set the controller
             OpretBookingController controller = loader.getController();
             controller.setDialogStage(dialogStage);
 
-            // Show the dialog and wait until the user closes it
             dialogStage.showAndWait();
 
-            // If save was clicked, reload appointments
             if (controller.isSaveClicked()) {
                 loadAppointments();
             }
@@ -372,20 +368,16 @@ public class ListeOversigtController {
             grid.setVgap(10);
             grid.setPadding(new Insets(20, 150, 10, 10));
 
-            // We need to create a separate UseCaseCalendar to access these methods
             UseCaseCalendar calendarUseCase = new UseCaseCalendar();
 
-            // Customer ComboBox with database values
             ComboBox<String> customerCombo = new ComboBox<>();
             customerCombo.getItems().addAll(calendarUseCase.getAllCustomerNames());
             customerCombo.setValue(appointmentData.getCustomerName());
 
-            // Treatment ComboBox with database values
             ComboBox<String> treatmentCombo = new ComboBox<>();
             treatmentCombo.getItems().addAll(calendarUseCase.getAllTreatmentNames());
             treatmentCombo.setValue(appointmentData.getTreatment());
 
-            // Employee ComboBox with database values
             ComboBox<String> employeeCombo = new ComboBox<>();
             employeeCombo.getItems().addAll(calendarUseCase.getAllEmployeeNames());
             employeeCombo.setValue(appointmentData.getEmployee());
@@ -395,7 +387,6 @@ public class ListeOversigtController {
             ComboBox<String> startTimeCombo = new ComboBox<>();
             ComboBox<String> endTimeCombo = new ComboBox<>();
 
-            // Populate time ComboBoxes
             for (int hour = 8; hour <= 18; hour++) {
                 startTimeCombo.getItems().add(String.format("%02d:00", hour));
                 endTimeCombo.getItems().add(String.format("%02d:00", hour));

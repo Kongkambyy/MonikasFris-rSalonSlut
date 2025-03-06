@@ -1,6 +1,7 @@
 package com.example.projektopgave1.Controller;
 
 import com.example.projektopgave1.Model.DatabaseHandlers.KundeDatabaseHandler;
+import com.example.projektopgave1.Model.Entiteter.Kunde;
 import com.example.projektopgave1.Model.UseCases.UseCaseOpretBooking;
 import Utils.LoggerUtility;
 import javafx.fxml.FXML;
@@ -11,57 +12,129 @@ import javafx.stage.Stage;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class OpretBookingController {
-    @FXML
-    private ComboBox<String> customerComboBox;
-    @FXML
-    private ComboBox<String> employeeComboBox;
-    @FXML
-    private ComboBox<String> treatmentComboBox;
-    @FXML
-    private DatePicker datePicker;
-    @FXML
-    private ComboBox<String> startTimeComboBox;
-    @FXML
-    private Button saveBookingButton;
-    @FXML
-    private Button cancelButton;
+    @FXML private ComboBox<String> customerComboBox;
+    @FXML private ComboBox<String> employeeComboBox;
+    @FXML private ComboBox<String> treatmentComboBox;
+    @FXML private DatePicker datePicker;
+    @FXML private ComboBox<String> startTimeComboBox;
+    @FXML private Button saveBookingButton;
+    @FXML private Button cancelButton;
+    @FXML private Label treatmentDurationLabel;
+    @FXML private Label treatmentPriceLabel;
+    @FXML private Label treatmentEndTimeLabel;
 
-    // Fields for the second tab (Opret Ny Kunde)
-    @FXML
-    private TextField nameTextField;
-    @FXML
-    private TextField phoneTextField;
-    @FXML
-    private TextField emailTextField;
-    @FXML
-    private TextField addressTextField;
-    @FXML
-    private Button saveCustomerButton;
+    @FXML private TextField nameTextField;
+    @FXML private TextField phoneTextField;
+    @FXML private TextField emailTextField;
+    @FXML private TextField addressTextField;
+    @FXML private Button saveCustomerButton;
 
+    // Use case og database handler vi skal bruge
     private UseCaseOpretBooking useCaseOpretBooking;
+    private KundeDatabaseHandler kundeDatabaseHandler;
+
     private Stage dialogStage;
+
+    // Holder styr på om brugeren har gemt
     private boolean saveClicked = false;
 
+    // Initialize metoden kører så snart vores .fxml er loadet
     @FXML
     public void initialize() {
-        useCaseOpretBooking = new UseCaseOpretBooking();
-        populateEmployeeComboBox();
-        populateTreatmentComboBox();
-        populateTimeComboBox();
+        try {
+            LoggerUtility.logEvent("Starter OpretBookingController");
 
-        // Set default date to today
-        datePicker.setValue(LocalDate.now());
+            // Opreter use case og database handler
+            useCaseOpretBooking = new UseCaseOpretBooking();
+            kundeDatabaseHandler = new KundeDatabaseHandler();
 
-        Platform.runLater(() -> customerComboBox.requestFocus());
+            // Fylder alle comboboxes med data
+            fyldKundeComboBox();
+            fyldMedarbejderComboBox();
+            fyldBehandlingComboBox();
+            fyldTidsComboBox();
+
+            // Tilføj listener til behandling så vi kan vise info
+            tilføjBehandlingsListener();
+
+            // Sætter datoen til i dag som standard
+            datePicker.setValue(LocalDate.now());
+
+            // Fokusere på kunde feltet når vinduet åbner
+            Platform.runLater(() -> customerComboBox.requestFocus());
+
+            LoggerUtility.logEvent("OpretBookingController klar");
+        } catch (Exception e) {
+            LoggerUtility.logError("Fejl ved opstart af booking vindue: " + e.getMessage());
+        }
     }
 
-    private void populateEmployeeComboBox() {
+     // Henter alle kunder fra databasen og putter dem i comboboxen
+    private void fyldKundeComboBox() {
+        try {
+            // Rydder comboboxen først
+            customerComboBox.getItems().clear();
+
+            // Hent alle kunder fra databasen
+            List<Kunde> kunder = kundeDatabaseHandler.readAll();
+            LoggerUtility.logEvent("Hentede " + kunder.size() + " kunder fra databasen");
+
+            // Tilføj hver kunde til comboboxen
+            for (Kunde kunde : kunder) {
+                customerComboBox.getItems().add(kunde.getNavn());
+            }
+
+            LoggerUtility.logEvent("Kunde combobox fyldt med " + customerComboBox.getItems().size() + " kunder");
+        } catch (Exception e) {
+            LoggerUtility.logError("Fejl ved indlæsning af kunder: " + e.getMessage());
+        }
+    }
+
+    private void tilføjBehandlingsListener() {
+        treatmentComboBox.setOnAction(event -> {
+            String valgtBehandling = treatmentComboBox.getValue();
+            if (valgtBehandling != null) {
+                opdaterBehandlingsInfo(valgtBehandling);
+            }
+        });
+    }
+
+    private void opdaterBehandlingsInfo(String behandlingsNavn) {
+        try {
+            // Henter varigheden for behandlingen
+            int varighed = useCaseOpretBooking.getTreatmentDuration(behandlingsNavn);
+
+            // Viser varigheden
+            treatmentDurationLabel.setText("Varighed: " + varighed + " minutter");
+
+            // Beregner sluttidspunkt hvis der er valgt starttid
+            String startTidStr = startTimeComboBox.getValue();
+            if (startTidStr != null) {
+                LocalTime startTid = LocalTime.parse(startTidStr, DateTimeFormatter.ofPattern("HH:mm"));
+                LocalTime slutTid = startTid.plusMinutes(varighed);
+                treatmentEndTimeLabel.setText("Forventet sluttidspunkt: " + slutTid.format(DateTimeFormatter.ofPattern("HH:mm")));
+            }
+
+            // Her kunne vi måske have lavet en metode der henter prisen fra databasen til hver behandling.
+            // I stedet kan kunden selv spørge :D
+
+            treatmentPriceLabel.setText("Pris: Spørg din frisør");
+
+        } catch (Exception e) {
+            LoggerUtility.logError("Fejl ved visning af behandlingsinfo: " + e.getMessage());
+        }
+    }
+
+    // Denne funktion fylder combobox ud med medarbejdere der er oprettet i databasen
+    private void fyldMedarbejderComboBox() {
         employeeComboBox.getItems().addAll(useCaseOpretBooking.getAllEmployeeNames());
     }
 
-    private void populateTreatmentComboBox() {
+    // Denne funktion fylder comboboxen for behandlinger vi har defineret i databasen.
+    private void fyldBehandlingComboBox() {
         treatmentComboBox.getItems().addAll(useCaseOpretBooking.getAllTreatmentNames());
     }
 
@@ -73,71 +146,77 @@ public class OpretBookingController {
         return saveClicked;
     }
 
-    private void populateTimeComboBox() {
-        for (int hour = 8; hour <= 18; hour++) {
-            startTimeComboBox.getItems().add(String.format("%02d:00", hour));
-            if (hour < 18) { // Don't add 18:30 as it would go beyond business hours
-                startTimeComboBox.getItems().add(String.format("%02d:30", hour));
+    // Denne funktion fylder comboboxen for tider på dagen. Alle mellem tidspunkterne 08-18
+    private void fyldTidsComboBox() {
+        for (int time = 8; time <= 18; time++) {
+            startTimeComboBox.getItems().add(String.format("%02d:00", time));
+            if (time < 18) { // Tilføj ikke 18:30 da det er efter lukketid
+                startTimeComboBox.getItems().add(String.format("%02d:30", time));
             }
         }
     }
 
+    // Denne funktion kører når vi trykker på Gem Booking
     @FXML
     private void handleSaveBooking() {
-        String customer = customerComboBox.getValue();
-        String employee = employeeComboBox.getValue();
-        String treatment = treatmentComboBox.getValue();
-        LocalDate date = datePicker.getValue();
-        String startTimeStr = startTimeComboBox.getValue();
+        // Henter alle værdier fra felterne
+        String kunde = customerComboBox.getValue();
+        String medarbejder = employeeComboBox.getValue();
+        String behandling = treatmentComboBox.getValue();
+        LocalDate dato = datePicker.getValue();
+        String startTidStr = startTimeComboBox.getValue();
 
-        if (customer == null || employee == null || treatment == null || date == null || startTimeStr == null) {
-            showAlert("Fejl", "Alle felter skal udfyldes.");
+        // Tjek at alle felter er udfyldt
+        if (kunde == null || medarbejder == null || behandling == null || dato == null || startTidStr == null) {
+            visAlert("Fejl", "Alle felter skal udfyldes.");
             return;
         }
 
-        LocalTime startTime;
+        // Konverter starttid fra string til LocalTime
+        LocalTime startTid;
         try {
-            startTime = LocalTime.parse(startTimeStr, DateTimeFormatter.ofPattern("HH:mm"));
+            startTid = LocalTime.parse(startTidStr, DateTimeFormatter.ofPattern("HH:mm"));
         } catch (Exception e) {
-            showAlert("Fejl", "Ugyldigt tidformat.");
+            visAlert("Fejl", "Ugyldigt tidformat.");
             return;
         }
 
-        // Calculate end time based on treatment duration
-        int duration = useCaseOpretBooking.getTreatmentDuration(treatment);
-        LocalTime endTime = startTime.plusMinutes(duration);
+        // Beregn sluttiden baseret på behandlingens varighed defineret i vores database
+        int varighed = useCaseOpretBooking.getTreatmentDuration(behandling);
+        LocalTime slutTid = startTid.plusMinutes(varighed);
 
-        // Check if time slot is available
-        if (!useCaseOpretBooking.isTimeSlotAvailable(employee, date, startTime, endTime)) {
-            showAlert("Fejl", "Tidsslot er ikke tilgængeligt for " + employee);
+        // Tjekker om tidspunktet er ledigt
+        if (!useCaseOpretBooking.isTimeSlotAvailable(medarbejder, dato, startTid, slutTid)) {
+            visAlert("Fejl", "Tid er ikke tilgængelig for " + medarbejder);
             return;
         }
 
-        // Try to create the booking
-        boolean success = useCaseOpretBooking.createBooking(customer, treatment, employee, date, startTime, endTime);
+        // Prøver at oprette bookingen
+        boolean success = useCaseOpretBooking.createBooking(kunde, behandling, medarbejder, dato, startTid, slutTid);
 
         if (success) {
             saveClicked = true;
-            showAlert("Succes", "Booking oprettet.");
+            visAlert("Succes", "Booking oprettet.");
             if (dialogStage != null) {
                 dialogStage.close();
             }
         } else {
-            showAlert("Fejl", "Booking kunne ikke oprettes.");
+            visAlert("Fejl", "Booking kunne ikke oprettes.");
         }
     }
 
+    // Denne funktion kører når der bliver trykket på Gem Kunde
     @FXML
     private void handleSaveCustomer() {
-        // Validate input
+        // Tjek at navnet er udfyldt
         if (nameTextField == null || nameTextField.getText() == null || nameTextField.getText().trim().isEmpty()) {
-            showAlert("Fejl", "Kundenavn skal udfyldes.");
+            visAlert("Fejl", "Kundenavn skal udfyldes.");
             return;
         }
 
         try {
-            // Create a new customer and add to database
-            com.example.projektopgave1.Model.Entiteter.Kunde newCustomer = new com.example.projektopgave1.Model.Entiteter.Kunde(
+            // Opret et nyt kunde objekt med de indtastede data
+            Kunde nyKunde = new Kunde(
                     0,
                     nameTextField.getText().trim(),
                     phoneTextField.getText() != null ? phoneTextField.getText().trim() : "",
@@ -145,31 +224,33 @@ public class OpretBookingController {
                     addressTextField.getText() != null ? addressTextField.getText().trim() : ""
             );
 
-            // Use the KundeDatabaseHandler directly
-            KundeDatabaseHandler kundeDatabaseHandler = new KundeDatabaseHandler();
-            com.example.projektopgave1.Model.Entiteter.Kunde savedCustomer = kundeDatabaseHandler.create(newCustomer);
+            // Gemmer kunden i databasen
+            Kunde gemt = kundeDatabaseHandler.create(nyKunde);
 
-            if (savedCustomer != null && savedCustomer.getKundeID() > 0) {
-                // Add to the customer ComboBox
-                customerComboBox.getItems().add(savedCustomer.getNavn());
-                customerComboBox.setValue(savedCustomer.getNavn());
+            if (gemt != null && gemt.getKundeID() > 0) {
+                // Opdatere kundelisten så den nye kunde vises
+                fyldKundeComboBox();
 
-                // Switch back to the first tab
+                // Vælg den nye kunde i listen
+                customerComboBox.setValue(gemt.getNavn());
+
+                // Skift tilbage til første fane
                 TabPane tabPane = (TabPane) nameTextField.getScene().lookup("#tabPane");
                 if (tabPane != null) {
                     tabPane.getSelectionModel().select(0);
                 }
 
-                showAlert("Succes", "Kunde oprettet og tilføjet.");
+                visAlert("Succes", "Kunde oprettet og tilføjet.");
             } else {
-                showAlert("Fejl", "Kunde kunne ikke oprettes.");
+                visAlert("Fejl", "Kunde kunne ikke oprettes.");
             }
         } catch (Exception e) {
             LoggerUtility.logError("Fejl ved oprettelse af kunde: " + e.getMessage());
-            showAlert("Fejl", "Der opstod en fejl: " + e.getMessage());
+            visAlert("Fejl", "Der opstod en fejl: " + e.getMessage());
         }
     }
 
+    // Her tjekker vi om brugeren trykker på annuler
     @FXML
     private void handleCancel() {
         saveClicked = false;
@@ -178,10 +259,11 @@ public class OpretBookingController {
         }
     }
 
-    private void showAlert(String title, String message) {
+    // En standard AlertBoks
+    private void visAlert(String titel, String besked) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setContentText(message);
+        alert.setTitle(titel);
+        alert.setContentText(besked);
         alert.showAndWait();
     }
 }

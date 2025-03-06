@@ -42,24 +42,30 @@ public class KalendarOversigtController {
     @FXML private Button editButton;
     @FXML private Button cancelBookingButton;
     @FXML private GridPane calendarGrid;
-
     private VBox selectedAppointment = null;
+
     private UseCaseCalendar useCaseCalendar;
 
     @FXML
     public void initialize() {
         try {
+            // Opretter use case objektet
             useCaseCalendar = new UseCaseCalendar();
 
-            updateDateLabel();
+            // Opdatere datoen der vises
+            opdaterDatoLabel();
 
-            setupEventHandlers();
+            // Sætter knapper og events op
+            sætEventHandlersOp();
 
-            setupInitialUIState();
+            // Sætter UI op så det er klar til brug
+            sætStartTilstandOp();
 
-            setupCalendarGrid();
+            // Opretter kalender grid med felter til hver dag/tid
+            opsætKalenderGrid();
 
-            reloadCalendar();
+            // Indlæser bookingerne og vis dem
+            genindlæsKalender();
 
             LoggerUtility.logEvent("Kalenderoversigtvisning initialiseret");
         } catch (Exception e) {
@@ -67,45 +73,54 @@ public class KalendarOversigtController {
         }
     }
 
-    private void setupEventHandlers() {
+
+    // Event handlers
+    private void sætEventHandlersOp() {
+        // I dag knappen går til dags dato
         todayButton.setOnAction(event -> {
             useCaseCalendar.moveToToday();
-            updateDateLabel();
-            reloadCalendar();
+            opdaterDatoLabel();
+            genindlæsKalender();
         });
 
+        // Tilbage knappen går en uge tilbage
         prevButton.setOnAction(event -> {
             useCaseCalendar.moveToPreviousWeek();
-            updateDateLabel();
-            reloadCalendar();
+            opdaterDatoLabel();
+            genindlæsKalender();
         });
 
+        // Frem knappen går en uge frem
         nextButton.setOnAction(event -> {
             useCaseCalendar.moveToNextWeek();
-            updateDateLabel();
-            reloadCalendar();
+            opdaterDatoLabel();
+            genindlæsKalender();
         });
 
+        // Alle bookinger checkboxen styrer de andre checkboxes
         allBookingsCheckBox.setOnAction(event -> {
-            updateEmployeeCheckboxState();
-            reloadCalendar();
+            opdaterMedarbejderCheckboxTilstand();
+            genindlæsKalender();
         });
 
-        jonCheckBox.setOnAction(event -> reloadCalendar());
-        joachimCheckBox.setOnAction(event -> reloadCalendar());
-        lasseCheckBox.setOnAction(event -> reloadCalendar());
-        gabrielCheckBox.setOnAction(event -> reloadCalendar());
+        // Medarbejder checkboxes opdaterer visningen når de ændres
+        jonCheckBox.setOnAction(event -> genindlæsKalender());
+        joachimCheckBox.setOnAction(event -> genindlæsKalender());
+        lasseCheckBox.setOnAction(event -> genindlæsKalender());
+        gabrielCheckBox.setOnAction(event -> genindlæsKalender());
 
-        newBookingButton.setOnAction(event -> handleNewBooking());
-        editButton.setOnAction(event -> handleEditBooking());
-        cancelBookingButton.setOnAction(event -> handleCancelBooking());
+        // Knapper til at lave nye bookings eller ændre eksisterende
+        newBookingButton.setOnAction(event -> håndterNyBooking());
+        editButton.setOnAction(event -> håndterRedigerBooking());
+        cancelBookingButton.setOnAction(event -> håndterAnnullerBooking());
 
+        // Skifter til listevisning hvis brugeren vælger det
         customerBookingsComboBox.setOnAction(event -> {
-            String selectedView = customerBookingsComboBox.getValue();
-            if (selectedView == null) return;
+            String valgtVisning = customerBookingsComboBox.getValue();
+            if (valgtVisning == null) return;
 
             try {
-                if (selectedView.equals("Listevisning")) {
+                if (valgtVisning.equals("Listevisning")) {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/projektopgave1/ListeOversigt.fxml"));
                     Parent root = loader.load();
 
@@ -124,74 +139,91 @@ public class KalendarOversigtController {
         });
     }
 
-    private void updateEmployeeCheckboxState() {
-        boolean allSelected = allBookingsCheckBox.isSelected();
-        jonCheckBox.setDisable(allSelected);
-        joachimCheckBox.setDisable(allSelected);
-        lasseCheckBox.setDisable(allSelected);
-        gabrielCheckBox.setDisable(allSelected);
+    // Denne metode gør egentlig kun, at når man vælger Alle medarbejdere, så er alle valgt.
+    private void opdaterMedarbejderCheckboxTilstand() {
+        boolean alleValgt = allBookingsCheckBox.isSelected();
+        jonCheckBox.setDisable(alleValgt);
+        joachimCheckBox.setDisable(alleValgt);
+        lasseCheckBox.setDisable(alleValgt);
+        gabrielCheckBox.setDisable(alleValgt);
     }
 
-    private void setupInitialUIState() {
+
+    private void sætStartTilstandOp() {
+        // Deaktivere redigerings og annuller knapper indtil en booking er valgt
         editButton.setDisable(true);
         cancelBookingButton.setDisable(true);
 
+        // Vælger alle medarbejdere som standard
         jonCheckBox.setSelected(true);
         joachimCheckBox.setSelected(true);
         lasseCheckBox.setSelected(true);
         gabrielCheckBox.setSelected(true);
         allBookingsCheckBox.setSelected(true);
-        updateEmployeeCheckboxState();
+        opdaterMedarbejderCheckboxTilstand();
     }
 
-    private void updateDateLabel() {
+     // Opdaterer dato labelen med den aktuelle uge
+    private void opdaterDatoLabel() {
         currentDateLabel.setText(useCaseCalendar.getFormattedDateRange());
     }
 
-    private void setupCalendarGrid() {
+
+    // Opretter et grid. StackOverflow er benyttet til dette
+    private void opsætKalenderGrid() {
         for (int col = 1; col <= 7; col++) {
             for (int row = 0; row <= 20; row++) {
                 Pane cell = new Pane();
                 cell.setStyle("-fx-border-color: #e8e8e8; -fx-border-width: 0.5;");
                 calendarGrid.add(cell, col, row);
 
-                final int dayColumn = col;
-                final int timeRow = row;
-                cell.setOnMouseClicked(event -> handleCellClick(dayColumn, timeRow));
+                // Gemmer kolonnen og rækken så vi ved hvilken celle der blev klikket på
+                final int dagKolonne = col;
+                final int tidRække = row;
+                cell.setOnMouseClicked(event -> håndterCelleKlik(dagKolonne, tidRække));
             }
         }
     }
 
-    private void reloadCalendar() {
+    // Refresher i bund og grund bare kalendaren, om der er ændringer.
+    private void genindlæsKalender() {
         try {
-            removeBookingsFromGrid();
+            // Fjerner alle eksisterende bookinger fra grid
+            fjernBookingsFraGrid();
 
+            // Nulstiller valgte bookings
             selectedAppointment = null;
             useCaseCalendar.clearSelectedAppointment();
             editButton.setDisable(true);
             cancelBookingButton.setDisable(true);
 
-            displayFilteredBookings();
+            // Viser de filtrerede bookinger baseret på valgte medarbejdere
+            visFilteredeBookinger();
         } catch (Exception e) {
             LoggerUtility.logError("Fejl ved genindlæsning af kalender: " + e.getMessage());
         }
     }
 
-    private void removeBookingsFromGrid() {
+    // Fjerner alle bokse
+    private void fjernBookingsFraGrid() {
         calendarGrid.getChildren().removeIf(node ->
                 node instanceof VBox && node.getStyleClass().contains("appointment-box"));
     }
 
-    private void displayFilteredBookings() {
-        boolean showJon = jonCheckBox.isSelected() || allBookingsCheckBox.isSelected();
-        boolean showJoachim = joachimCheckBox.isSelected() || allBookingsCheckBox.isSelected();
-        boolean showLasse = lasseCheckBox.isSelected() || allBookingsCheckBox.isSelected();
-        boolean showGabriel = gabrielCheckBox.isSelected() || allBookingsCheckBox.isSelected();
+    // Vores filtrering der viser hvilken medarbejder der er valgt
+    private void visFilteredeBookinger() {
+        // Tjekker hvilke medarbejdere der er valgt
+        boolean visJon = jonCheckBox.isSelected() || allBookingsCheckBox.isSelected();
+        boolean visJoachim = joachimCheckBox.isSelected() || allBookingsCheckBox.isSelected();
+        boolean visLasse = lasseCheckBox.isSelected() || allBookingsCheckBox.isSelected();
+        boolean visGabriel = gabrielCheckBox.isSelected() || allBookingsCheckBox.isSelected();
 
-        List<AppointmentData> appointments = useCaseCalendar.getFilteredAppointments(showJon, showJoachim, showLasse, showGabriel);
+        // Henter alle bookinger for de valgte medarbejdere
+        List<AppointmentData> bookinger = useCaseCalendar.getFilteredAppointments(visJon, visJoachim, visLasse, visGabriel);
 
-        for (AppointmentData data : appointments) {
-            VBox bookingBox = createBookingBox(
+        // Opreter og viser hver booking i gridden
+        for (AppointmentData data : bookinger) {
+            VBox bookingBoks = opretBookingBoks(
                     data.getId(),
                     data.getCustomerName(),
                     data.getTreatment(),
@@ -201,54 +233,65 @@ public class KalendarOversigtController {
                     data.getDayOfWeek()
             );
 
-            int startRow = useCaseCalendar.timeToRow(data.getStartTime());
-            int endRow = useCaseCalendar.timeToRow(data.getEndTime());
-            int rowSpan = Math.max(1, endRow - startRow);
+            // Finder ud af hvor i grid boksen skal placeres
+            int startRække = useCaseCalendar.timeToRow(data.getStartTime());
+            int slutRække = useCaseCalendar.timeToRow(data.getEndTime());
+            int antalRækker = Math.max(1, slutRække - startRække);
 
-            calendarGrid.add(bookingBox, data.getDayOfWeek(), startRow, 1, rowSpan);
+            // Tilføjer boksen til grid
+            calendarGrid.add(bookingBoks, data.getDayOfWeek(), startRække, 1, antalRækker);
         }
     }
 
-    private VBox createBookingBox(int id, String customerName, String treatment, String employee,
-                                  LocalTime startTime, LocalTime endTime, int dayOfWeek) {
-        VBox bookingBox = new VBox(5);
-        bookingBox.getStyleClass().add("appointment-box");
-        bookingBox.setPadding(new Insets(5));
+    // Denne kode er taget fra ChatGPT. Den opretter i bund og grund de bokse der kan ses på kalendervisningen
+    private VBox opretBookingBoks(int id, String kundeNavn, String behandling, String medarbejder,
+                                  LocalTime startTid, LocalTime slutTid, int ugedag) {
+        // Opretter VBox til at vise booking information
+        VBox bookingBoks = new VBox(5);
+        bookingBoks.getStyleClass().add("appointment-box");
+        bookingBoks.setPadding(new Insets(5));
 
-        bookingBox.setBackground(new Background(new BackgroundFill(
+        // Sætter baggrund og kant
+        bookingBoks.setBackground(new Background(new BackgroundFill(
                 Color.rgb(229, 224, 183, 0.9),
                 new CornerRadii(4),
                 Insets.EMPTY)));
-        bookingBox.setBorder(new Border(new BorderStroke(
+        bookingBoks.setBorder(new Border(new BorderStroke(
                 Color.rgb(180, 124, 97, 0.8),
                 BorderStrokeStyle.SOLID,
                 new CornerRadii(4),
                 new BorderWidths(1))));
 
-        Label nameLabel = new Label(customerName);
-        nameLabel.setStyle("-fx-font-weight: bold;");
+        // Opretter labels med information
+        Label navnLabel = new Label(kundeNavn);
+        navnLabel.setStyle("-fx-font-weight: bold;");
 
-        Label treatmentLabel = new Label(treatment);
+        Label behandlingsLabel = new Label(behandling);
 
-        Label employeeLabel = new Label(employee);
-        employeeLabel.setStyle("-fx-font-style: italic;");
+        Label medarbejderLabel = new Label(medarbejder);
+        medarbejderLabel.setStyle("-fx-font-style: italic;");
 
-        Label timeLabel = new Label(
-                startTime.format(DateTimeFormatter.ofPattern("HH:mm")) + " - " +
-                        endTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+        Label tidsLabel = new Label(
+                startTid.format(DateTimeFormatter.ofPattern("HH:mm")) + " - " +
+                        slutTid.format(DateTimeFormatter.ofPattern("HH:mm"))
         );
 
-        bookingBox.getChildren().addAll(nameLabel, treatmentLabel, employeeLabel, timeLabel);
+        // Tilføjer labels til boksen
+        bookingBoks.getChildren().addAll(navnLabel, behandlingsLabel, medarbejderLabel, tidsLabel);
 
-        bookingBox.setUserData(id);
+        // Gemmer booking ID så vi ved hvilken booking det er
+        bookingBoks.setUserData(id);
 
-        bookingBox.setOnMouseClicked(event -> handleBookingClick(bookingBox));
+        // Tilføjer klik handler så man kan vælge bookingen
+        bookingBoks.setOnMouseClicked(event -> håndterBookingKlik(bookingBoks));
 
-        return bookingBox;
+        return bookingBoks;
     }
 
-    private void handleBookingClick(VBox bookingBox) {
+    // Denne kode kører når vi trykker på en booking
+    private void håndterBookingKlik(VBox bookingBoks) {
         try {
+            // Hvis der allerede er valgt en booking, fjernes markeringen
             if (selectedAppointment != null) {
                 selectedAppointment.setBorder(new Border(new BorderStroke(
                         Color.rgb(180, 124, 97, 0.8),
@@ -257,16 +300,19 @@ public class KalendarOversigtController {
                         new BorderWidths(1))));
             }
 
-            selectedAppointment = bookingBox;
-            int appointmentId = (int) bookingBox.getUserData();
-            useCaseCalendar.setSelectedAppointmentId(appointmentId);
+            // Sætter den nye valgte booking
+            selectedAppointment = bookingBoks;
+            int bookingId = (int) bookingBoks.getUserData();
+            useCaseCalendar.setSelectedAppointmentId(bookingId);
 
-            bookingBox.setBorder(new Border(new BorderStroke(
+            // Markere den valgte booking med blå kant
+            bookingBoks.setBorder(new Border(new BorderStroke(
                     Color.rgb(0, 120, 215),
                     BorderStrokeStyle.SOLID,
                     new CornerRadii(4),
                     new BorderWidths(2))));
 
+            // Aktivere redigerings og annuller knapper
             editButton.setDisable(false);
             cancelBookingButton.setDisable(false);
         } catch (Exception e) {
@@ -274,7 +320,8 @@ public class KalendarOversigtController {
         }
     }
 
-    private void handleCellClick(int dayColumn, int timeRow) {
+    // Denne metode håndtere når brugeren trykker på en tom celle. Bruges også til at "deselect" en aktiv celle.
+    private void håndterCelleKlik(int dagKolonne, int tidRække) {
         if (selectedAppointment != null) {
             selectedAppointment.setBorder(new Border(new BorderStroke(
                     Color.rgb(180, 124, 97, 0.8),
@@ -290,12 +337,14 @@ public class KalendarOversigtController {
         }
     }
 
-    private void handleNewBooking() {
+    // Denne funktion kører når brugeren vil oprette en ny booking.
+    private void håndterNyBooking() {
         try {
+            // Indlæser opret booking vinduet
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/projektopgave1/OpretBooking.fxml"));
             Parent page = loader.load();
 
-            // Create the Stage
+            // Opretter vores popup vindue
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Opret Ny Booking");
             dialogStage.initModality(Modality.WINDOW_MODAL);
@@ -303,45 +352,51 @@ public class KalendarOversigtController {
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
 
-            // Set the controller
+            // Sætter controlleren op
             OpretBookingController controller = loader.getController();
             controller.setDialogStage(dialogStage);
 
-            // Show the dialog and wait until the user closes it
+            // Viser vinduet og venter til brugeren lukker det
             dialogStage.showAndWait();
 
-            // If save was clicked, reload the calendar
+            // Hvis der blev gemt en booking, opdateres kalenderen
             if (controller.isSaveClicked()) {
-                reloadCalendar();
+                genindlæsKalender();
             }
         } catch (IOException e) {
             LoggerUtility.logError("Fejl ved åbning af booking-dialog: " + e.getMessage());
         }
     }
 
-    private void handleEditBooking() {
+    // Brugeren trykker på Rediger booking, kører denne metode
+    private void håndterRedigerBooking() {
         try {
+            // Tjek at der er valgt en booking
             if (selectedAppointment == null) return;
 
-            int appointmentId = useCaseCalendar.getSelectedAppointmentId();
-            AppointmentData currentData = useCaseCalendar.getAppointmentById(appointmentId);
+            // Henter den valgte booking
+            int bookingId = useCaseCalendar.getSelectedAppointmentId();
+            AppointmentData currentData = useCaseCalendar.getAppointmentById(bookingId);
             if (currentData == null) return;
 
-            Dialog<ButtonType> dialog = createEditDialog(appointmentId, currentData);
+            // Opreter en dialog til at redigere bookingen
+            Dialog<ButtonType> dialog = opretRedigerDialog(bookingId, currentData);
             Optional<ButtonType> result = dialog.showAndWait();
 
+            // Hvis brugeren trykker ok, gemmer vi ændringerne
             if (result.isPresent() && result.get().getButtonData() == ButtonBar.ButtonData.OK_DONE) {
-                processEditDialogResult(dialog, appointmentId);
+                behandlRedigerDialogResultat(dialog, bookingId);
             }
         } catch (Exception e) {
             LoggerUtility.logError("Fejl ved redigering af booking: " + e.getMessage());
         }
     }
 
-    private Dialog<ButtonType> createEditDialog(int appointmentId, AppointmentData currentData) {
+    // Redigere en booking vindue
+    private Dialog<ButtonType> opretRedigerDialog(int bookingId, AppointmentData currentData) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Rediger Booking");
-        dialog.setHeaderText("Rediger booking #" + appointmentId);
+        dialog.setHeaderText("Rediger booking #" + bookingId);
 
         ButtonType saveButtonType = new ButtonType("Gem", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
@@ -351,17 +406,17 @@ public class KalendarOversigtController {
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 150, 10, 10));
 
-        // Customer ComboBox with database values instead of TextField
+        // Kunde ComboBox med værdier fra databasen
         ComboBox<String> customerCombo = new ComboBox<>();
         customerCombo.getItems().addAll(useCaseCalendar.getAllCustomerNames());
         customerCombo.setValue(currentData.getCustomerName());
 
-        // Treatment ComboBox with database values instead of TextField
+        // Behandling ComboBox med værdier fra databasen
         ComboBox<String> treatmentCombo = new ComboBox<>();
         treatmentCombo.getItems().addAll(useCaseCalendar.getAllTreatmentNames());
         treatmentCombo.setValue(currentData.getTreatment());
 
-        // Employee ComboBox with database values instead of hardcoded values
+        // Medarbejder ComboBox med værdier fra databasen
         ComboBox<String> employeeCombo = new ComboBox<>();
         employeeCombo.getItems().addAll(useCaseCalendar.getAllEmployeeNames());
         employeeCombo.setValue(currentData.getEmployee());
@@ -371,7 +426,7 @@ public class KalendarOversigtController {
         ComboBox<String> startTimeCombo = new ComboBox<>();
         ComboBox<String> endTimeCombo = new ComboBox<>();
 
-        populateTimeComboBoxes(startTimeCombo, endTimeCombo);
+        fyldTidsComboBoxes(startTimeCombo, endTimeCombo);
 
         startTimeCombo.setValue(currentData.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")));
         endTimeCombo.setValue(currentData.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")));
@@ -395,39 +450,24 @@ public class KalendarOversigtController {
         return dialog;
     }
 
-    private void populateTimeComboBoxes(ComboBox<String> startTimeCombo, ComboBox<String> endTimeCombo) {
-        for (int hour = 8; hour <= 18; hour++) {
-            startTimeCombo.getItems().add(String.format("%02d:00", hour));
-            endTimeCombo.getItems().add(String.format("%02d:00", hour));
+    // Denne metode gør de gule bokse i vores kalendervisningen fylde mere, baseret på behandlingens varighed.
+    private void fyldTidsComboBoxes(ComboBox<String> startTimeCombo, ComboBox<String> endTimeCombo) {
+        for (int time = 8; time <= 18; time++) {
+            startTimeCombo.getItems().add(String.format("%02d:00", time));
+            endTimeCombo.getItems().add(String.format("%02d:00", time));
 
-            if (hour < 18) {
-                startTimeCombo.getItems().add(String.format("%02d:30", hour));
-                endTimeCombo.getItems().add(String.format("%02d:30", hour));
+            if (time < 18) {
+                startTimeCombo.getItems().add(String.format("%02d:30", time));
+                endTimeCombo.getItems().add(String.format("%02d:30", time));
             }
         }
     }
 
-    private void addControlsToGrid(GridPane grid, TextField customerField, TextField treatmentField,
-                                   ComboBox<String> employeeCombo, DatePicker datePicker,
-                                   ComboBox<String> startTimeCombo, ComboBox<String> endTimeCombo) {
-        grid.add(new Label("Kunde:"), 0, 0);
-        grid.add(customerField, 1, 0);
-        grid.add(new Label("Behandling:"), 0, 1);
-        grid.add(treatmentField, 1, 1);
-        grid.add(new Label("Medarbejder:"), 0, 2);
-        grid.add(employeeCombo, 1, 2);
-        grid.add(new Label("Dato:"), 0, 3);
-        grid.add(datePicker, 1, 3);
-        grid.add(new Label("Starttid:"), 0, 4);
-        grid.add(startTimeCombo, 1, 4);
-        grid.add(new Label("Sluttid:"), 0, 5);
-        grid.add(endTimeCombo, 1, 5);
-    }
-
-    private void processEditDialogResult(Dialog<ButtonType> dialog, int appointmentId) {
+    // Denne metode behandler når vi redigere i en booking
+    private void behandlRedigerDialogResultat(Dialog<ButtonType> dialog, int bookingId) {
         GridPane grid = (GridPane) dialog.getDialogPane().getContent();
 
-        // Update to use ComboBox instead of TextField
+        // Hent alle værdier fra felterne
         ComboBox<String> customerCombo = (ComboBox<String>) getNodeByRowColumnIndex(0, 1, grid);
         ComboBox<String> treatmentCombo = (ComboBox<String>) getNodeByRowColumnIndex(1, 1, grid);
         ComboBox<String> employeeCombo = (ComboBox<String>) getNodeByRowColumnIndex(2, 1, grid);
@@ -435,14 +475,16 @@ public class KalendarOversigtController {
         ComboBox<String> startTimeCombo = (ComboBox<String>) getNodeByRowColumnIndex(4, 1, grid);
         ComboBox<String> endTimeCombo = (ComboBox<String>) getNodeByRowColumnIndex(5, 1, grid);
 
+        // Konvertere tider fra strenge til LocalTime
         String startTimeStr = startTimeCombo.getValue();
         String endTimeStr = endTimeCombo.getValue();
         LocalTime startTime = LocalTime.parse(startTimeStr, DateTimeFormatter.ofPattern("HH:mm"));
         LocalTime endTime = LocalTime.parse(endTimeStr, DateTimeFormatter.ofPattern("HH:mm"));
         LocalDate selectedDate = datePicker.getValue();
 
+        // Opdatere bookingen med de nye værdier
         useCaseCalendar.updateAppointment(
-                appointmentId,
+                bookingId,
                 customerCombo.getValue(),
                 treatmentCombo.getValue(),
                 employeeCombo.getValue(),
@@ -451,12 +493,15 @@ public class KalendarOversigtController {
                 selectedDate
         );
 
-        reloadCalendar();
+        // Genindlæser kalenderen så ændringerne vises
+        genindlæsKalender();
 
-        showInfoAlert("Booking Opdateret", null,
-                "Booking #" + appointmentId + " er blevet opdateret.");
+        // Vis en bekræftelse til brugeren
+        visInfoAlert("Booking Opdateret", null,
+                "Booking #" + bookingId + " er blevet opdateret.");
     }
 
+     // Finder et element i GridPane baseret på række og kolonne
     private javafx.scene.Node getNodeByRowColumnIndex(final int row, final int column, GridPane gridPane) {
         for (javafx.scene.Node node : gridPane.getChildren()) {
             if (GridPane.getRowIndex(node) == row && GridPane.getColumnIndex(node) == column) {
@@ -466,30 +511,37 @@ public class KalendarOversigtController {
         return null;
     }
 
-    private void handleCancelBooking() {
+    // Denne metode håndtere når brugeren vil annullere en aktiv booking
+    private void håndterAnnullerBooking() {
         try {
-            if (selectedAppointment == null) return;
+            // Tjek at der er valgt en booking
+            if (selectedAppointment == null)
+                return;
 
-            int appointmentId = useCaseCalendar.getSelectedAppointmentId();
+            // Henter booking ID
+            int bookingId = useCaseCalendar.getSelectedAppointmentId();
 
+            // Vis en bekræftelse dialog
             Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
             confirmAlert.setTitle("Bekræft Annullering");
             confirmAlert.setHeaderText("Er du sikker på, at du vil annullere denne booking?");
-            confirmAlert.setContentText("Booking #" + appointmentId);
+            confirmAlert.setContentText("Booking #" + bookingId);
 
             Optional<ButtonType> result = confirmAlert.showAndWait();
 
+            // Hvis brugeren bekræfter, annulleres bookingen
             if (result.isPresent() && result.get() == ButtonType.OK) {
-                useCaseCalendar.deleteAppointment(appointmentId);
-                reloadCalendar();
-                showInfoAlert("Booking Annulleret", null, "Booking er blevet annulleret.");
+                useCaseCalendar.deleteAppointment(bookingId);
+                genindlæsKalender(); // Genindlæser kalenderen så brugeren ikke stadig ser det gamle
+                visInfoAlert("Booking Annulleret", null, "Booking er blevet annulleret.");
             }
         } catch (Exception e) {
             LoggerUtility.logError("Fejl ved annullering af booking: " + e.getMessage());
         }
     }
 
-    private void showInfoAlert(String title, String headerText, String contentText) {
+    // Viser en alert
+    private void visInfoAlert(String title, String headerText, String contentText) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(headerText);

@@ -222,6 +222,7 @@ public class UseCaseCalendar {
                 }
             }
         } catch (DatabaseConnectionException e) {
+
             // Log fejlen hvis der opstår problemer med databasen
             LoggerUtility.logError("Fejl ved hentning af aftaler: " + e.getMessage());
         }

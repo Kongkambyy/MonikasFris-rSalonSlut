@@ -18,7 +18,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="500.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane prefHeight="500.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.projektopgave1.Controller.OpretBookingController">
     <top>
         <VBox BorderPane.alignment="CENTER">
             <children>
@@ -38,7 +38,7 @@
         </VBox>
     </top>
     <center>
-        <TabPane tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
             <tabs>
                 <Tab text="Book Tid">
                     <content>
@@ -111,7 +111,7 @@
                                         <TextField fx:id="emailTextField" promptText="Indtast email" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                         <Label text="Adresse:" GridPane.rowIndex="3" />
                                         <TextField fx:id="addressTextField" promptText="Indtast adresse" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                        <Button fx:id="saveCustomerButton" mnemonicParsing="false" prefHeight="35.0" prefWidth="192.0" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Gem Kunde &amp; Fortsæt" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                        <Button fx:id="saveCustomerButton" onAction="#handleSaveCustomer" mnemonicParsing="false" prefHeight="35.0" prefWidth="192.0" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Gem Kunde &amp; Fortsæt" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                     </children>
                                 </GridPane>
                             </children></AnchorPane>
@@ -123,8 +123,8 @@
     <bottom>
         <HBox alignment="CENTER_RIGHT" spacing="10.0" BorderPane.alignment="CENTER">
             <children>
-                <Button fx:id="cancelButton" mnemonicParsing="false" prefHeight="30.0" prefWidth="100.0" text="Annuller" />
-                <Button fx:id="saveBookingButton" mnemonicParsing="false" prefHeight="30.0" prefWidth="100.0" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Gem Booking" />
+                <Button fx:id="cancelButton" onAction="#handleCancel" mnemonicParsing="false" prefHeight="30.0" prefWidth="100.0" text="Annuller" />
+                <Button fx:id="saveBookingButton" onAction="#handleSaveBooking" mnemonicParsing="false" prefHeight="30.0" prefWidth="100.0" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Gem Booking" />
             </children>
             <BorderPane.margin>
                 <Insets bottom="15.0" left="15.0" right="15.0" top="10.0" />

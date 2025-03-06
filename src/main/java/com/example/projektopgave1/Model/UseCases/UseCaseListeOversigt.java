@@ -125,7 +125,7 @@ public class UseCaseListeOversigt {
             this.status = status;
         }
 
-        // Get-metoder til at tilgå alle aftale-oplysninger
+        // Get metoder til at tilgå alle aftale-oplysninger
         public int getId() { return id; }
         public String getCustomerId() { return customerId; }
         public String getCustomerName() { return customerName; }
@@ -144,12 +144,12 @@ public class UseCaseListeOversigt {
         return currentDate;
     }
 
-    // Henter den aktuelle søgeterm
+    // Henter det aktuelle søgeterm
     public String getSearchTerm() {
         return searchTerm;
     }
 
-    // Sætter en ny søgeterm (konverterer til lowercase for case-insensitive søgning)
+    // Sætter et nyt søgeterm, og ignorere store små bogstaver
     public void setSearchTerm(String term) {
         searchTerm = term != null ? term.toLowerCase() : "";
     }
@@ -165,13 +165,13 @@ public class UseCaseListeOversigt {
         if (employees != null) selectedEmployees.addAll(employees);
     }
 
-    // Nulstiller alle filtre (søgeterm og medarbejdervalg)
+    // Nulstiller alle filtre
     public void clearFilters() {
         searchTerm = "";
         selectedEmployees.clear();
     }
 
-    // Henter alle aftaler med fyldig information
+    // Henter alle aftaler
     public List<AppointmentData> getAllAppointments() {
         List<AppointmentData> appointments = new ArrayList<>();
         try {
@@ -213,6 +213,7 @@ public class UseCaseListeOversigt {
                 }
             }
         } catch (DatabaseConnectionException e) {
+
             // Log fejl hvis databaseforbindelsen fejler
             LoggerUtility.logError("Fejl ved hentning af aftaler: " + e.getMessage());
         }
@@ -229,17 +230,17 @@ public class UseCaseListeOversigt {
 
             for (Aftale aftale : appointments) {
                 try {
-                    // Hvis der er aktive filtre, tjek om aftalen matcher
+                    // Hvis der er aktive filtre, tjekker vi om aftalen matcher
                     if (!searchTerm.isEmpty() || !selectedEmployees.isEmpty()) {
                         Kunde kunde = kundeDatabaseHandler.readById(aftale.getKundeID());
                         Medarbejder medarbejder = medarbejderDatabaseHandler.getById(aftale.getMedarbejderID());
 
-                        // Filtrer efter valgte medarbejdere
+                        // Filtrere efter valgte medarbejdere
                         if (!selectedEmployees.isEmpty() && medarbejder != null && !selectedEmployees.contains(medarbejder.getNavn())) {
-                            continue; // Spring over hvis medarbejderen ikke er valgt
+                            continue;
                         }
 
-                        // Filtrer efter søgeterm
+                        // Filtrere efter søgeterm
                         if (!searchTerm.isEmpty()) {
                             boolean matches = false;
                             if ((kunde != null && kunde.getNavn().toLowerCase().contains(searchTerm)) ||
@@ -249,7 +250,7 @@ public class UseCaseListeOversigt {
                             }
 
                             if (!matches) {
-                                continue; // Spring over hvis aftalen ikke matcher søgetermen
+                                continue; // Spring over hvis aftalen ikke matcher
                             }
                         }
                     }
@@ -323,9 +324,9 @@ public class UseCaseListeOversigt {
                                                String customerName, String employeeName, String treatment, String status) {
         return new AppointmentListItem(
                 id,
-                date.format(dateFormatter),  // Formatterer dato til tekst
-                startTime.format(TIME_FORMATTER),  // Formatterer starttid til tekst
-                endTime.format(TIME_FORMATTER),    // Formatterer sluttid til tekst
+                date.format(dateFormatter),
+                startTime.format(TIME_FORMATTER),
+                endTime.format(TIME_FORMATTER),
                 customerName,
                 employeeName,
                 treatment,

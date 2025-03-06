@@ -94,8 +94,6 @@ public class KundeDatabaseHandler {
         return kunder;
     }
 
-
-
     public boolean update(Kunde kunde) throws DatabaseConnectionException {
         String sql = "UPDATE kunde SET Navn = ?, Nummer = ?, Mail = ?, Adresse = ? WHERE KundeID = ?";
 
